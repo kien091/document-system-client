@@ -42,7 +42,7 @@ export default function DashboardPage() {
   }, [api]);
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
+    <div className="max-w-7xl mx-auto space-y-6 pl-6">
       <div className="relative w-full h-[400px] mb-8 overflow-hidden shadow-[4px_4px_10px_rgba(0,0,0,0.2)] rounded-xl">
         <Carousel
           className="w-full"

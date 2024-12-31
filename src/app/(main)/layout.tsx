@@ -43,6 +43,30 @@ const notifications = [
     time: "2 giờ trước",
     isRead: true,
   },
+  {
+    id: 4,
+    message: "Lê Văn C đã gửi công văn mới cần duyệt",
+    time: "2 giờ trước",
+    isRead: true,
+  },
+  {
+    id: 5,
+    message: "Lê Văn C đã gửi công văn mới cần duyệt",
+    time: "2 giờ trước",
+    isRead: true,
+  },
+  {
+    id: 6,
+    message: "Lê Văn C đã gửi công văn mới cần duyệt",
+    time: "2 giờ trước",
+    isRead: true,
+  },
+  {
+    id: 7,
+    message: "Lê Văn C đã gửi công văn mới cần duyệt",
+    time: "2 giờ trước",
+    isRead: true,
+  },
 ];
 
 export default function MainLayout({
@@ -191,7 +215,7 @@ export default function MainLayout({
       </header>
 
       {/* Main content */}
-      <main className="flex-1 p-6 bg-[#f0f2f5]">{children}</main>
+      <main className="flex-1 pr-6 pt-6 pb-6 bg-[#f0f2f5]">{children}</main>
 
       {/* Footer */}
       <Footer />
@@ -202,7 +226,7 @@ export default function MainLayout({
 const Footer = () => {
   return (
     <footer className="bg-[#333333] text-white">
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-4 py-8 ml-10 mr-10">
         <div className="grid grid-cols-7 gap-8">
           {/* Column 1 - Logo and Address (3/7) */}
           <div className="col-span-3">
