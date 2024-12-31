@@ -2,12 +2,30 @@
 
 import Image from "next/image";
 import { Camera, PencilIcon } from "lucide-react";
-import { useState } from "react"
-import { UploadImageModal } from "./components/upload-image-modal"
+import { useState } from "react";
+import { UploadImageModal } from "./components/upload-image-modal";
+import { EditInfoModal } from "./components/edit-info-modal";
 
 export default function ProfilePage() {
-  const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false)
-  const [isCoverModalOpen, setIsCoverModalOpen] = useState(false)
+  const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
+  const [isCoverModalOpen, setIsCoverModalOpen] = useState(false);
+  const [isContactModalOpen, setIsContactModalOpen] = useState(false);
+  const [isDepartmentModalOpen, setIsDepartmentModalOpen] = useState(false);
+
+  const contactFields = [
+    { label: "Email", value: "52100752@student.tdtu.edu.vn", id: "email" },
+    { label: "Phone Number", value: "0945454086", id: "phone" },
+  ];
+
+  const departmentFields = [
+    { label: "Phone", value: "(028) 37755046", id: "deptPhone" },
+    {
+      label: "Address",
+      value:
+        "Phòng C004, Số 19 Nguyễn Hữu Thọ, P. Tân Phong, Quận 7, Tp. Hồ Chí Minh",
+      id: "address",
+    },
+  ];
 
   return (
     <div className="min-h-screen">
@@ -65,7 +83,9 @@ export default function ProfilePage() {
             <div className="bg-white p-6 rounded-lg shadow-[4px_4px_10px_rgba(0,0,0,0.2)]">
               <div className="flex items-center justify-between mb-4 pb-2.5 border-b border-gray-300">
                 <h2 className="text-lg font-semibold">Liên lạc</h2>
-                <PencilIcon className="w-7 h-7 text-gray-400 cursor-pointer hover:bg-gray-200 hover:text-gray-600 p-1.5 rounded-md" />
+                <button onClick={() => setIsContactModalOpen(true)}>
+                  <PencilIcon className="w-5 h-5 text-gray-400 hover:text-gray-600" />
+                </button>
               </div>
               <div className="space-y-4">
                 <div>
@@ -82,8 +102,10 @@ export default function ProfilePage() {
             {/* Department */}
             <div className="bg-white p-6 rounded-lg shadow-[4px_4px_10px_rgba(0,0,0,0.2)]">
               <div className="flex items-center justify-between mb-4 pb-2.5 border-b border-gray-300">
-                <h2 className="text-lg font-semibold">Department</h2>
-                <Camera className="w-7 h-7 text-gray-400 cursor-pointer hover:bg-gray-200 hover:text-gray-600 p-1.5 rounded-md" />
+                <h2 className="text-lg font-semibold">Phòng ban</h2>
+                <button onClick={() => setIsDepartmentModalOpen(true)}>
+                  <PencilIcon className="w-5 h-5 text-gray-400 hover:text-gray-600" />
+                </button>
               </div>
               <div className="space-y-4">
                 <div>
@@ -101,49 +123,61 @@ export default function ProfilePage() {
             </div>
           </div>
 
-        {/* Recent Documents */}
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold mb-4">Công văn gần đây</h2>
-          <div className="relative">
-            <div className="grid grid-cols-3 gap-4 overflow-hidden">
-              <div className="col-span-3">
-                <div className="flex gap-4 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-                  {[1, 2, 3, 4, 5, 6].map((_, index) => (
-                    <div key={index} className="flex-none w-[32%] first:ml-0">
-                      <div className="bg-white p-4 rounded-lg shadow">
-                        <Image
-                          src="/images/news/thongbao.jpg"
-                          alt="Document"
-                          width={400}
-                          height={250}
-                          className="w-full rounded-md mb-3"
-                        />
-                        <h3 className="font-medium mb-1 line-clamp-2">
-                          Thông báo lịch nghỉ Tết Dương lịch và Tết Nguyên đán
-                          Giáp Thìn 2024
-                        </h3>
+          {/* Recent Documents */}
+          <div className="mb-8">
+            <h2 className="text-xl font-semibold mb-4">Công văn gần đây</h2>
+            <div className="relative">
+              <div className="grid grid-cols-3 gap-4 overflow-hidden">
+                <div className="col-span-3">
+                  <div className="flex gap-4 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+                    {[1, 2, 3, 4, 5, 6].map((_, index) => (
+                      <div key={index} className="flex-none w-[32%] first:ml-0 mb-4">
+                        <div className="bg-white p-4 rounded-lg shadow">
+                          <Image
+                            src="/images/news/thongbao.jpg"
+                            alt="Document"
+                            width={400}
+                            height={250}
+                            className="w-full rounded-md mb-3"
+                          />
+                          <h3 className="font-medium mb-1 line-clamp-2">
+                            Thông báo lịch nghỉ Tết Dương lịch và Tết Nguyên đán
+                            Giáp Thìn 2024
+                          </h3>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Modals */}
-      <UploadImageModal
-        isOpen={isAvatarModalOpen}
-        onClose={() => setIsAvatarModalOpen(false)}
-        title="Update Profile Picture"
-        aspectRatio="square"
-      />
-      <UploadImageModal
-        isOpen={isCoverModalOpen}
-        onClose={() => setIsCoverModalOpen(false)}
-        title="Update Cover Photo"
-        aspectRatio="cover"
+        {/* Modals */}
+        <EditInfoModal
+          isOpen={isContactModalOpen}
+          onClose={() => setIsContactModalOpen(false)}
+          title="Thông tin liên lạc"
+          fields={contactFields}
+        />
+        <EditInfoModal
+          isOpen={isDepartmentModalOpen}
+          onClose={() => setIsDepartmentModalOpen(false)}
+          title="Thông tin phòng ban"
+          fields={departmentFields}
+        />
+        <UploadImageModal
+          isOpen={isAvatarModalOpen}
+          onClose={() => setIsAvatarModalOpen(false)}
+          title="Cập nhật ảnh đại diện"
+          aspectRatio="square"
+        />
+        <UploadImageModal
+          isOpen={isCoverModalOpen}
+          onClose={() => setIsCoverModalOpen(false)}
+          title="Cập nhật ảnh bìa"
+          aspectRatio="cover"
         />
       </div>
     </div>

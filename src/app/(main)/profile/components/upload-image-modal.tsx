@@ -4,7 +4,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
@@ -25,6 +24,7 @@ export function UploadImageModal({
   aspectRatio = "square",
 }: UploadImageModalProps) {
   const [preview, setPreview] = useState<string | null>(null);
+  const [dragActive, setDragActive] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -38,9 +38,34 @@ export function UploadImageModal({
   };
 
   const handleUpload = () => {
-    // Handle upload logic here
+    // TODO: Handle upload logic here
     onClose();
     setPreview(null);
+  };
+
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+
+    const file = e.dataTransfer.files?.[0];
+    if (file && file.type.startsWith("image/")) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   return (
@@ -51,7 +76,7 @@ export function UploadImageModal({
         </DialogHeader>
         <div className="space-y-4">
           {preview ? (
-            <div className="relative">
+            <div className="relative h-48 w-full">
               <div
                 className={`relative ${
                   aspectRatio === "cover" ? "h-48 w-full" : "w-40 h-40 mx-auto"
@@ -74,14 +99,23 @@ export function UploadImageModal({
               </button>
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-6 cursor-pointer hover:border-gray-400">
+            <label
+              htmlFor="image-upload"
+              className={`h-48 w-full flex flex-col items-center justify-center border-2 border-dashed rounded-lg p-6 cursor-pointer transition-colors
+                ${
+                  dragActive
+                    ? "border-blue-500 bg-blue-50"
+                    : "border-gray-300 hover:border-gray-400"
+                }`}
+              onDragEnter={handleDrag}
+              onDragLeave={handleDrag}
+              onDragOver={handleDrag}
+              onDrop={handleDrop}
+            >
               <Upload className="w-8 h-8 text-gray-400 mb-2" />
-              <Label
-                htmlFor="image-upload"
-                className="cursor-pointer text-sm text-gray-600"
-              >
-                Click to upload or drag and drop
-              </Label>
+              <span className="text-sm text-gray-600">
+                Nhấn để tải lên hoặc kéo và thả
+              </span>
               <Input
                 id="image-upload"
                 type="file"
@@ -89,15 +123,15 @@ export function UploadImageModal({
                 className="hidden"
                 onChange={handleFileChange}
               />
-            </div>
+            </label>
           )}
 
           <div className="flex justify-end gap-3">
             <Button variant="outline" onClick={onClose}>
-              Cancel
+              Hủy
             </Button>
             <Button onClick={handleUpload} disabled={!preview}>
-              Upload
+              Tải lên
             </Button>
           </div>
         </div>
