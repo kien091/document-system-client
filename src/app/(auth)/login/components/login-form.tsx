@@ -6,9 +6,17 @@ import { Input } from "@/components/ui/input";
 import { ResetPasswordModal } from "./reset-password-modal";
 import { User, Lock } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export function LoginForm() {
   const [showResetModal, setShowResetModal] = useState(false);
+  const router = useRouter();
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Add your login logic here
+    router.push("/dashboard");
+  };
 
   return (
     <div className="w-full max-w-md space-y-8">
@@ -17,7 +25,7 @@ export function LoginForm() {
           Xin chào!
         </h1>
       </div>
-      <form className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-6">
         <div className="space-y-4">
           <div className="relative">
             <User className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
@@ -51,9 +59,7 @@ export function LoginForm() {
             className="w-1/2 bg-[#d0d7d7] hover:bg-[#d0d7d7]/90 rounded-2xl"
             asChild
           >
-            <Link href="/register">
-              Đăng ký
-            </Link>
+            <Link href="/register">Đăng ký</Link>
           </Button>
         </div>
       </form>

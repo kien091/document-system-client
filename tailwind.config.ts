@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss"
+import animate from "tailwindcss-animate"
 
 const config = {
   darkMode: ["class"],
@@ -7,7 +8,7 @@ const config = {
     './components/**/*.{ts,tsx}',
     './app/**/*.{ts,tsx}',
     './src/**/*.{ts,tsx}',
-	],
+  ],
   prefix: "",
   theme: {
     container: {
@@ -67,14 +68,26 @@ const config = {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
+        wiggle: {
+          '0%, 100%': { transform: 'rotate(-10deg)' },
+          '50%': { transform: 'rotate(10deg)' },
+        },
+        "bell-shake": {
+          "0%, 100%": { transform: "rotate(0)" },
+          "20%, 40%": { transform: "rotate(-15deg)" },
+          "30%, 50%": { transform: "rotate(15deg)" },
+          "70%, 90%": { transform: "rotate(0)" },
+        }
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        wiggle: 'wiggle 1s ease-in-out infinite',
+        "bell-shake": "bell-shake 2s ease-in-out infinite"
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [animate],
 } satisfies Config
 
 export default config
