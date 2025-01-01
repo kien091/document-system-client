@@ -14,6 +14,7 @@ import {
 import Image from "next/image";
 import { useState, useRef, useEffect } from "react";
 import AddDocumentModal from "./components/AddDocumentModal";
+import FilterDocumentModal from "./components/FilterDocumentModal";
 
 interface DocumentType {
   id: number;
@@ -63,6 +64,8 @@ export default function IncomingDocumentsPage() {
   const [activeAction, setActiveAction] = useState("history");
   const itemsPerPage = 7;
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const documents = [
     {
@@ -72,6 +75,7 @@ export default function IncomingDocumentsPage() {
       department: "Phòng Đại học",
       status: "new",
       date: "11/11/2024",
+      documentNumber: "1234567890",
     },
     {
       id: 2,
@@ -79,6 +83,7 @@ export default function IncomingDocumentsPage() {
       department: "Phòng Đào tạo",
       status: "processing",
       date: "10/11/2024",
+      documentNumber: "1234567890",
     },
     {
       id: 3,
@@ -87,6 +92,7 @@ export default function IncomingDocumentsPage() {
       department: "Phòng Đại học",
       status: "new",
       date: "11/11/2024",
+      documentNumber: "1234567890",
     },
     {
       id: 4,
@@ -95,6 +101,7 @@ export default function IncomingDocumentsPage() {
       department: "Phòng Đại học",
       status: "new",
       date: "11/11/2024",
+      documentNumber: "1234567890",
     },
     {
       id: 5,
@@ -103,6 +110,7 @@ export default function IncomingDocumentsPage() {
       department: "Phòng Đại học",
       status: "new",
       date: "11/11/2024",
+      documentNumber: "1234567890",
     },
     {
       id: 6,
@@ -111,6 +119,7 @@ export default function IncomingDocumentsPage() {
       department: "Phòng Đào tạo",
       status: "completed",
       date: "01/11/2024",
+      documentNumber: "1234567890",
     },
     {
       id: 7,
@@ -119,6 +128,7 @@ export default function IncomingDocumentsPage() {
       department: "Phòng Đào tạo",
       status: "completed",
       date: "01/11/2024",
+      documentNumber: "1234567890",
     },
     {
       id: 8,
@@ -127,6 +137,7 @@ export default function IncomingDocumentsPage() {
       department: "Phòng Đào tạo",
       status: "completed",
       date: "01/11/2024",
+      documentNumber: "1234567890",
     },
     {
       id: 9,
@@ -135,6 +146,7 @@ export default function IncomingDocumentsPage() {
       department: "Phòng Đào tạo",
       status: "completed",
       date: "01/11/2024",
+      documentNumber: "1234567890",
     },
     {
       id: 10,
@@ -143,6 +155,7 @@ export default function IncomingDocumentsPage() {
       department: "Phòng Đào tạo",
       status: "completed",
       date: "01/11/2024",
+      documentNumber: "1234567890",
     },
     {
       id: 11,
@@ -151,6 +164,7 @@ export default function IncomingDocumentsPage() {
       department: "Phòng Đào tạo",
       status: "completed",
       date: "01/11/2024",
+      documentNumber: "1234567890",
     },
     {
       id: 12,
@@ -159,6 +173,7 @@ export default function IncomingDocumentsPage() {
       department: "Phòng Đào tạo",
       status: "completed",
       date: "01/11/2024",
+      documentNumber: "1234567890",
     },
     {
       id: 13,
@@ -167,6 +182,7 @@ export default function IncomingDocumentsPage() {
       department: "Phòng Đại học",
       status: "new",
       date: "11/11/2024",
+      documentNumber: "1234567890",
     },
     {
       id: 14,
@@ -174,6 +190,7 @@ export default function IncomingDocumentsPage() {
       department: "Phòng Đào tạo",
       status: "processing",
       date: "10/11/2024",
+      documentNumber: "1234567890",
     },
     {
       id: 15,
@@ -182,6 +199,7 @@ export default function IncomingDocumentsPage() {
       department: "Phòng Đại học",
       status: "new",
       date: "11/11/2024",
+      documentNumber: "1234567890",
     },
     {
       id: 16,
@@ -190,6 +208,7 @@ export default function IncomingDocumentsPage() {
       department: "Phòng Đại học",
       status: "new",
       date: "11/11/2024",
+      documentNumber: "1234567890",
     },
     {
       id: 17,
@@ -198,6 +217,7 @@ export default function IncomingDocumentsPage() {
       department: "Phòng Đại học",
       status: "new",
       date: "11/11/2024",
+      documentNumber: "1234567890",
     },
     {
       id: 18,
@@ -206,6 +226,7 @@ export default function IncomingDocumentsPage() {
       department: "Phòng Đào tạo",
       status: "completed",
       date: "01/11/2024",
+      documentNumber: "1234567890",
     },
     {
       id: 19,
@@ -214,6 +235,7 @@ export default function IncomingDocumentsPage() {
       department: "Phòng Đào tạo",
       status: "completed",
       date: "01/11/2024",
+      documentNumber: "1234567890",
     },
     {
       id: 20,
@@ -222,6 +244,7 @@ export default function IncomingDocumentsPage() {
       department: "Phòng Đào tạo",
       status: "completed",
       date: "01/11/2024",
+      documentNumber: "1234567890",
     },
     {
       id: 21,
@@ -230,6 +253,7 @@ export default function IncomingDocumentsPage() {
       department: "Phòng Đào tạo",
       status: "completed",
       date: "01/11/2024",
+      documentNumber: "1234567890",
     },
     {
       id: 22,
@@ -238,6 +262,7 @@ export default function IncomingDocumentsPage() {
       department: "Phòng Đào tạo",
       status: "completed",
       date: "01/11/2024",
+      documentNumber: "1234567890",
     },
     {
       id: 23,
@@ -246,13 +271,20 @@ export default function IncomingDocumentsPage() {
       department: "Phòng Đào tạo",
       status: "completed",
       date: "01/11/2024",
+      documentNumber: "1234567890",
     },
   ];
 
-  const totalPages = Math.ceil(documents.length / itemsPerPage);
+  const filteredDocuments = documents.filter(
+    (doc) =>
+      doc.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      doc.department.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      doc.documentNumber.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+  const totalPages = Math.ceil(filteredDocuments.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const currentDocuments = documents.slice(startIndex, endIndex);
+  const currentDocuments = filteredDocuments.slice(startIndex, endIndex);
 
   const handleClose = () => {
     setIsClosing(true);
@@ -330,6 +362,10 @@ export default function IncomingDocumentsPage() {
     }
   };
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
   return (
     <div className="p-4 overflow-x-hidden">
       {/* Page title */}
@@ -347,8 +383,10 @@ export default function IncomingDocumentsPage() {
             <Search className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
               type="text"
-              placeholder="Tìm kiếm"
-              className="w-full pl-10 pr-4 py-2 rounded-md border focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Tìm kiếm công văn..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-3 py-2 border rounded-lg text-sm focus:outline-none focus:border-blue-500"
             />
           </div>
           <button
@@ -357,7 +395,10 @@ export default function IncomingDocumentsPage() {
           >
             Thêm mới
           </button>
-          <button className="p-2 hover:bg-gray-100 rounded-md">
+          <button
+            onClick={() => setIsFilterModalOpen(true)}
+            className="p-2 hover:bg-gray-100 rounded-md"
+          >
             <Filter className="w-5 h-5" />
           </button>
           <button className="p-2 hover:bg-gray-100 rounded-md">
@@ -746,6 +787,11 @@ export default function IncomingDocumentsPage() {
       <AddDocumentModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
+      />
+
+      <FilterDocumentModal
+        isOpen={isFilterModalOpen}
+        onClose={() => setIsFilterModalOpen(false)}
       />
     </div>
   );
