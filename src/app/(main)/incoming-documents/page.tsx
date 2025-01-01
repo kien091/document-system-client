@@ -22,6 +22,7 @@ import { useState, useRef, useEffect } from "react";
 import AddDocumentModal from "./components/AddDocumentModal";
 import FilterDocumentModal from "./components/FilterDocumentModal";
 import PreviewModal from "./components/PreviewModal";
+import AddTaskModal from "./components/AddTaskModal";
 
 interface DocumentType {
   id: number;
@@ -109,6 +110,7 @@ export default function IncomingDocumentsPage() {
   const [newComment, setNewComment] = useState("");
   const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
   const [editContent, setEditContent] = useState("");
+  const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
 
   const documents = [
     {
@@ -1009,7 +1011,10 @@ export default function IncomingDocumentsPage() {
                       ))}
 
                       {/* Add task button */}
-                      <button className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 p-2">
+                      <button
+                        className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 p-2"
+                        onClick={() => setIsAddTaskModalOpen(true)}
+                      >
                         <Plus className="w-4 h-4" />
                         Thêm công việc mới
                       </button>
@@ -1113,6 +1118,11 @@ export default function IncomingDocumentsPage() {
         onClose={() => setIsPreviewOpen(false)}
         fileUrl="/files/601.BTTTT-CNTT.pdf" // path to file
         fileType="pdf" // type of file
+      />
+
+      <AddTaskModal
+        isOpen={isAddTaskModalOpen}
+        onClose={() => setIsAddTaskModalOpen(false)}
       />
     </div>
   );
