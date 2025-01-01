@@ -1,7 +1,6 @@
 "use client";
 import {
   Search,
-  Plus,
   MoreHorizontal,
   Filter,
   Building,
@@ -14,6 +13,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { useState, useRef, useEffect } from "react";
+import AddDocumentModal from "./components/AddDocumentModal";
 
 interface DocumentType {
   id: number;
@@ -62,6 +62,7 @@ export default function IncomingDocumentsPage() {
   const [isClosing, setIsClosing] = useState(false);
   const [activeAction, setActiveAction] = useState("history");
   const itemsPerPage = 7;
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   const documents = [
     {
@@ -350,9 +351,11 @@ export default function IncomingDocumentsPage() {
               className="w-full pl-10 pr-4 py-2 rounded-md border focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
-          <button className="bg-blue-500 text-white px-4 py-2 rounded-md flex items-center gap-2 hover:bg-blue-600">
-            <Plus className="w-5 h-5" />
-            Thêm
+          <button
+            onClick={() => setIsAddModalOpen(true)}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            Thêm mới
           </button>
           <button className="p-2 hover:bg-gray-100 rounded-md">
             <Filter className="w-5 h-5" />
@@ -739,6 +742,11 @@ export default function IncomingDocumentsPage() {
           }
         }
       `}</style>
+
+      <AddDocumentModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+      />
     </div>
   );
 }

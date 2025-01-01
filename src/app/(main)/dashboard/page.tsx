@@ -117,7 +117,7 @@ export default function DashboardPage() {
             <QuickAccessCard
               title="CÔNG VĂN ĐẾN"
               icon={<Mail className="w-8 h-8" />}
-              href="/documents/incoming"
+              href="/incoming-documents"
             />
             <QuickAccessCard
               title="CÔNG VĂN ĐI"
