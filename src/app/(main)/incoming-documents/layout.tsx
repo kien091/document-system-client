@@ -11,7 +11,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 
-export default function ProfileLayout({
+export default function IncomingDocumentsLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -29,7 +29,7 @@ export default function ProfileLayout({
         <nav className="flex flex-col">
           <a
             href="/profile"
-            className={`flex items-center gap-3 px-4 py-3 text-white bg-red-600 rounded-tr-md ${
+            className={`flex items-center gap-3 px-4 py-3 hover:bg-gray-100 ${
               isCollapsed ? "justify-center" : ""
             }`}
           >
@@ -38,7 +38,7 @@ export default function ProfileLayout({
           </a>
           <a
             href="/incoming-documents"
-            className={`flex items-center gap-3 px-4 py-3 hover:bg-gray-100 ${
+            className={`flex items-center gap-3 px-4 py-3 text-white bg-red-600 rounded-tr-md ${
               isCollapsed ? "justify-center" : ""
             }`}
           >
