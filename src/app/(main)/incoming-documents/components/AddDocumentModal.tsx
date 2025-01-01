@@ -133,7 +133,7 @@ export default function AddDocumentModal({
 
               <div>
                 <label className="block text-xs mb-1">
-                  Mã tài ngôn gọn công văn{" "}
+                  Mô tả ngắn gọn công văn{" "}
                   <span className="text-red-500">*</span>
                 </label>
                 <textarea className="w-full border rounded-lg p-2 h-20" />

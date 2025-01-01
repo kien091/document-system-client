@@ -10,11 +10,18 @@ import {
   History,
   MessageCircle,
   CheckSquare,
+  Printer,
+  Clock,
+  Plus,
+  MoreVertical,
+  Edit2,
+  Trash2,
 } from "lucide-react";
 import Image from "next/image";
 import { useState, useRef, useEffect } from "react";
 import AddDocumentModal from "./components/AddDocumentModal";
 import FilterDocumentModal from "./components/FilterDocumentModal";
+import PreviewModal from "./components/PreviewModal";
 
 interface DocumentType {
   id: number;
@@ -66,6 +73,42 @@ export default function IncomingDocumentsPage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [comments, setComments] = useState([
+    {
+      id: 1,
+      user: "Nguyễn Trung Kiên",
+      avatar: "/images/avatar.png",
+      position: "Giám đốc",
+      department: "Phòng Đại học",
+      content: "Đã xem và phê duyệt văn bản này.",
+      time: "14:40",
+      date: "11/11/2024",
+    },
+    {
+      id: 2,
+      user: "Nguyễn Trung Kiên",
+      avatar: "/images/avatar.png",
+      position: "Giám đốc",
+      department: "Phòng Đại học",
+      content: "Ai làm công văn này lên văn phòng gặp tôi ngay lập tức.",
+      time: "15:30",
+      date: "11/11/2024",
+    },
+    {
+      id: 3,
+      user: "Nguyễn Trung Kiên",
+      avatar: "/images/avatar.png",
+      position: "Giám đốc",
+      department: "Phòng Đại học",
+      content: "Công văn này có vấn đề gì không?",
+      time: "15:30",
+      date: "11/11/2024",
+    },
+  ]);
+  const [newComment, setNewComment] = useState("");
+  const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
+  const [editContent, setEditContent] = useState("");
 
   const documents = [
     {
@@ -366,6 +409,91 @@ export default function IncomingDocumentsPage() {
     setCurrentPage(1);
   }, [searchTerm]);
 
+  const handlePrint = () => {
+    const fileUrl = "/files/601.BTTTT-CNTT.pdf"; // path to your file
+    const fileType = fileUrl.split(".").pop()?.toLowerCase();
+
+    if (fileType === "xlsx" || fileType === "xls") {
+      // TODO: Implement Api to convert excel to pdf
+      alert("Chức năng đang phát triển với file excel");
+      return;
+    } else {
+      const printFrame = document.createElement("iframe");
+      printFrame.style.display = "none";
+      printFrame.src = fileUrl;
+
+      document.body.appendChild(printFrame);
+
+      printFrame.onload = () => {
+        setTimeout(() => {
+          printFrame.contentWindow?.print();
+        }, 1000);
+      };
+    }
+  };
+
+  const handleDownload = (fileUrl: string) => {
+    const link = document.createElement("a");
+    link.href = fileUrl;
+    link.download = fileUrl.split("/").pop() || "document";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleAddComment = () => {
+    if (!newComment.trim()) return;
+
+    const now = new Date();
+    const time = now.toLocaleTimeString("vi-VN", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+    const date = now.toLocaleDateString("vi-VN");
+
+    setComments([
+      ...comments,
+      {
+        id: comments.length + 1,
+        user: "Nguyễn Trung Kiên",
+        avatar: "/images/avatar.png",
+        position: "Giám đốc",
+        department: "Phòng Đại học",
+        content: newComment,
+        time,
+        date,
+      },
+    ]);
+
+    setNewComment("");
+  };
+
+  const handleEditComment = (commentId: number, content: string) => {
+    setEditingCommentId(commentId);
+    setEditContent(content);
+  };
+
+  const handleSaveEdit = (commentId: number) => {
+    if (!editContent.trim()) return;
+
+    setComments(
+      comments.map((comment) =>
+        comment.id === commentId
+          ? { ...comment, content: editContent }
+          : comment
+      )
+    );
+
+    setEditingCommentId(null);
+    setEditContent("");
+  };
+
+  const handleDeleteComment = (commentId: number) => {
+    if (window.confirm("Bạn có chắc chắn muốn xóa bình luận này?")) {
+      setComments(comments.filter((comment) => comment.id !== commentId));
+    }
+  };
+
   return (
     <div className="p-4 overflow-x-hidden">
       {/* Page title */}
@@ -650,12 +778,23 @@ export default function IncomingDocumentsPage() {
                     <button
                       className="p-2 hover:bg-gray-100 rounded-full transition-colors"
                       title="Xem"
+                      onClick={() => setIsPreviewOpen(true)}
                     >
                       <Eye className="w-4 h-4 text-gray-600" />
                     </button>
                     <button
                       className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                      title="In"
+                      onClick={handlePrint}
+                    >
+                      <Printer className="w-4 h-4 text-gray-600" />
+                    </button>
+                    <button
+                      className="p-2 hover:bg-gray-100 rounded-full transition-colors"
                       title="Tải về"
+                      onClick={() =>
+                        handleDownload("/files/601.BTTTT-CNTT.pdf")
+                      } // TODO: Change to file url
                     >
                       <Download className="w-4 h-4 text-gray-600" />
                     </button>
@@ -664,45 +803,220 @@ export default function IncomingDocumentsPage() {
               </div>
 
               {/* Timeline section - flexible height with scroll */}
-              <div className="flex-1 min-h-0 border-b">
-                <div className="h-full overflow-y-auto">
-                  <div className="p-4 space-y-4">
-                    {Array.from({ length: 10 }).map((_, index) => (
-                      <div key={index} className="flex gap-4">
-                        {/* Time and date column */}
-                        <div className="flex flex-col items-end min-w-[100px]">
-                          <div className="text-lg font-medium text-blue-600">
-                            14:40
+              {activeAction === "history" && (
+                <div className="flex-1 min-h-0 border-b">
+                  <div className="h-full overflow-y-auto">
+                    <div className="p-4 space-y-4">
+                      {Array.from({ length: 10 }).map((_, index) => (
+                        <div key={index} className="flex gap-4">
+                          {/* Time and date column */}
+                          <div className="flex flex-col items-end min-w-[100px]">
+                            <div className="text-lg font-medium text-blue-600">
+                              14:40
+                            </div>
+                            <div className="text-gray-500 text-sm">
+                              11/11/2024
+                            </div>
                           </div>
-                          <div className="text-gray-500 text-sm">
-                            11/11/2024
-                          </div>
-                        </div>
 
-                        {/* User info */}
-                        <div className="flex gap-3">
-                          <Image
-                            src="/images/avatar.png"
-                            alt="User"
-                            width={32}
-                            height={32}
-                            className="rounded-full w-8 h-8 object-cover"
-                          />
-                          <div className="flex flex-col">
-                            <p className="font-medium">Nguyễn Trung Kiên</p>
-                            <p className="text-gray-500 text-sm">
-                              Giảng viên khoa Công nghệ thông tin
-                            </p>
-                            <p className="text-gray-500 text-sm">
-                              Nhận từ Phòng Đại học
-                            </p>
+                          {/* User info */}
+                          <div className="flex gap-3">
+                            <Image
+                              src="/images/avatar.png"
+                              alt="User"
+                              width={32}
+                              height={32}
+                              className="rounded-full w-8 h-8 object-cover"
+                            />
+                            <div className="flex flex-col">
+                              <p className="font-medium">Nguyễn Trung Kiên</p>
+                              <p className="text-gray-500 text-sm">
+                                Giảng viên khoa Công nghệ thông tin
+                              </p>
+                              <p className="text-gray-500 text-sm">
+                                Nhận từ Phòng Đại học
+                              </p>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
+
+              {/* Comments section */}
+              {activeAction === "comments" && (
+                <div className="flex-1 min-h-0 border-b">
+                  <div className="h-full flex flex-col">
+                    <div className="flex-1 overflow-y-auto">
+                      <div className="p-4 space-y-4">
+                        {comments.map((comment) => (
+                          <div key={comment.id} className="flex gap-3">
+                            <Image
+                              src={comment.avatar}
+                              alt={comment.user}
+                              width={32}
+                              height={32}
+                              className="rounded-full w-8 h-8 object-cover shrink-0 mt-3"
+                            />
+                            <div className="flex-1">
+                              <div className="bg-gray-50 rounded-lg p-3">
+                                <div className="flex justify-between items-start mb-1">
+                                  <div>
+                                    <p className="font-medium text-sm">
+                                      {comment.user}
+                                    </p>
+                                    <p className="text-xs text-gray-500">
+                                      {comment.position} ({comment.department})
+                                    </p>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <button
+                                      className="p-1 hover:bg-gray-200 rounded-full"
+                                      onClick={() =>
+                                        handleEditComment(
+                                          comment.id,
+                                          comment.content
+                                        )
+                                      }
+                                    >
+                                      <Edit2 className="w-3.5 h-3.5 text-blue-500" />
+                                    </button>
+                                    <button
+                                      className="p-1 hover:bg-gray-200 rounded-full"
+                                      onClick={() =>
+                                        handleDeleteComment(comment.id)
+                                      }
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5 text-red-500" />
+                                    </button>
+                                  </div>
+                                </div>
+                                {editingCommentId === comment.id ? (
+                                  <div className="flex gap-2">
+                                    <input
+                                      type="text"
+                                      value={editContent}
+                                      onChange={(e) =>
+                                        setEditContent(e.target.value)
+                                      }
+                                      onKeyDown={(e) =>
+                                        e.key === "Enter" &&
+                                        handleSaveEdit(comment.id)
+                                      }
+                                      className="flex-1 border rounded-lg px-3 py-1 text-sm focus:outline-none focus:border-blue-500"
+                                      autoFocus
+                                    />
+                                    <button
+                                      onClick={() => handleSaveEdit(comment.id)}
+                                      className="px-3 py-1 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700"
+                                    >
+                                      Lưu
+                                    </button>
+                                    <button
+                                      onClick={() => setEditingCommentId(null)}
+                                      className="px-3 py-1 bg-gray-100 text-gray-600 rounded-lg text-sm hover:bg-gray-200"
+                                    >
+                                      Hủy
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <p className="text-sm">{comment.content}</p>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-4 mt-1 text-xs text-gray-500 mx-3">
+                                <span>{comment.time}</span>
+                                <span>{comment.date}</span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Comment input */}
+                    <div className="p-4 border-t">
+                      <div className="flex gap-3">
+                        <Image
+                          src="/images/avatar.png"
+                          alt="User"
+                          width={32}
+                          height={32}
+                          className="rounded-full w-8 h-8 object-cover shrink-0"
+                        />
+                        <div className="flex-1 flex gap-2">
+                          <input
+                            type="text"
+                            placeholder="Viết bình luận..."
+                            value={newComment}
+                            onChange={(e) => setNewComment(e.target.value)}
+                            onKeyDown={(e) =>
+                              e.key === "Enter" && handleAddComment()
+                            }
+                            className="flex-1 border rounded-full px-4 py-1.5 text-sm focus:outline-none focus:border-blue-500"
+                          />
+                          <button
+                            onClick={handleAddComment}
+                            className="px-4 py-1.5 bg-blue-600 text-white rounded-full text-sm hover:bg-blue-700"
+                          >
+                            Gửi
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Tasks section */}
+              {activeAction === "tasks" && (
+                <div className="flex-1 min-h-0 border-b">
+                  <div className="h-full overflow-y-auto">
+                    <div className="p-4 space-y-3">
+                      {/* Task items */}
+                      {Array.from({ length: 3 }).map((_, index) => (
+                        <div
+                          key={index}
+                          className="flex items-start gap-3 p-3 border rounded-lg"
+                        >
+                          <input type="checkbox" className="mt-1" />
+                          <div className="flex-1">
+                            <p className="text-sm font-medium">
+                              Xem xét và phê duyệt văn bản
+                            </p>
+                            <div className="flex items-center gap-3 mt-2 text-xs text-gray-500">
+                              <div className="flex items-center gap-1">
+                                <Clock className="w-3.5 h-3.5" />
+                                <span>Hạn: 20/03/2024</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Image
+                                  src="/images/avatar.png"
+                                  alt="User"
+                                  width={16}
+                                  height={16}
+                                  className="rounded-full w-4 h-4 object-cover shrink-0"
+                                />
+                                <span>Nguyễn Trung Kiên</span>
+                              </div>
+                            </div>
+                          </div>
+                          <button className="p-1.5 hover:bg-gray-100 rounded-full">
+                            <MoreVertical className="w-4 h-4 text-gray-500" />
+                          </button>
+                        </div>
+                      ))}
+
+                      {/* Add task button */}
+                      <button className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 p-2">
+                        <Plus className="w-4 h-4" />
+                        Thêm công việc mới
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Actions */}
               <div className="flex-shrink-0 px-4 py-3 border-t">
@@ -792,6 +1106,13 @@ export default function IncomingDocumentsPage() {
       <FilterDocumentModal
         isOpen={isFilterModalOpen}
         onClose={() => setIsFilterModalOpen(false)}
+      />
+
+      <PreviewModal
+        isOpen={isPreviewOpen}
+        onClose={() => setIsPreviewOpen(false)}
+        fileUrl="/files/601.BTTTT-CNTT.pdf" // path to file
+        fileType="pdf" // type of file
       />
     </div>
   );
