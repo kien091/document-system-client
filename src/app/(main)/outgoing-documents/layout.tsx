@@ -38,7 +38,7 @@ export default function IncomingDocumentsLayout({
           </a>
           <a
             href="/incoming-documents"
-            className={`flex items-center gap-3 px-4 py-3 text-white bg-red-600 rounded-tr-md ${
+            className={`flex items-center gap-3 px-4 py-3 hover:bg-gray-100 ${
               isCollapsed ? "justify-center" : ""
             }`}
           >
@@ -47,7 +47,7 @@ export default function IncomingDocumentsLayout({
           </a>
           <a
             href="/outgoing-documents"
-            className={`flex items-center gap-3 px-4 py-3 hover:bg-gray-100 ${
+            className={`flex items-center gap-3 px-4 py-3 text-white bg-red-600 rounded-tr-md ${
               isCollapsed ? "justify-center" : ""
             }`}
           >

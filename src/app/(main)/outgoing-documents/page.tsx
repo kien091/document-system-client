@@ -500,7 +500,7 @@ export default function IncomingDocumentsPage() {
     <div className="p-4 overflow-x-hidden">
       {/* Page title */}
       <div className="flex items-center gap-2 mb-6">
-        <h1 className="text-xl font-semibold">Công văn đến</h1>
+        <h1 className="text-xl font-semibold">Công văn đi</h1>
         <span className="text-gray-500">|</span>
         <span className="text-gray-500">Tất cả (57)</span>
       </div>
