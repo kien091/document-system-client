@@ -18,65 +18,20 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { cn, formatTimeAgo } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useRouter } from "next/navigation";
-
-// Mock data for notifications
-const notifications = [
-  {
-    id: 1,
-    message: "Nguyễn Văn A đã yêu cầu duyệt công văn số 123/CV-ABC",
-    time: "2 phút trước",
-    isRead: false,
-  },
-  {
-    id: 2,
-    message: "Trần Thị B đã phê duyệt công văn số 456/CV-XYZ",
-    time: "1 giờ trước",
-    isRead: false,
-  },
-  {
-    id: 3,
-    message: "Lê Văn C đã gửi công văn mới cần duyệt",
-    time: "2 giờ trước",
-    isRead: true,
-  },
-  {
-    id: 4,
-    message: "Lê Văn C đã gửi công văn mới cần duyệt",
-    time: "2 giờ trước",
-    isRead: true,
-  },
-  {
-    id: 5,
-    message: "Lê Văn C đã gửi công văn mới cần duyệt",
-    time: "2 giờ trước",
-    isRead: true,
-  },
-  {
-    id: 6,
-    message: "Lê Văn C đã gửi công văn mới cần duyệt",
-    time: "2 giờ trước",
-    isRead: true,
-  },
-  {
-    id: 7,
-    message: "Lê Văn C đã gửi công văn mới cần duyệt",
-    time: "2 giờ trước",
-    isRead: true,
-  },
-];
+import { useAuth } from "@/contexts/auth.context";
+import { useNotifications } from "@/contexts/notification.context";
 
 export default function MainLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const { profile } = useAuth();
   const router = useRouter();
-  const [hasNotifications] = useState(true);
-  const unreadNotifications = notifications.filter((n) => !n.isRead);
+  const { notifications, unreadCount, loading } = useNotifications();
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -104,11 +59,11 @@ export default function MainLayout({
                   <Bell
                     className={cn(
                       "h-5 w-5 text-gray-600",
-                      hasNotifications &&
+                      unreadCount > 0 &&
                         "animate-[bell-shake_1s_ease-in-out_infinite]"
                     )}
                   />
-                  {hasNotifications && (
+                  {unreadCount > 0 && (
                     <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full" />
                   )}
                 </div>
@@ -118,49 +73,67 @@ export default function MainLayout({
                   <TabsList className="grid w-full grid-cols-2">
                     <TabsTrigger value="all">Tất cả</TabsTrigger>
                     <TabsTrigger value="unread">
-                      Chưa đọc ({unreadNotifications.length})
+                      Chưa đọc ({unreadCount})
                     </TabsTrigger>
                   </TabsList>
                   <TabsContent
                     value="all"
                     className="max-h-[400px] overflow-y-auto"
                   >
-                    {notifications.map((notification) => (
-                      <DropdownMenuItem
-                        key={notification.id}
-                        className="flex flex-col items-start p-4"
-                      >
-                        <p
-                          className={cn(
-                            "text-sm",
-                            !notification.isRead && "font-medium"
-                          )}
+                    {loading ? (
+                      <div className="p-4 text-center text-gray-500">
+                        Đang tải...
+                      </div>
+                    ) : notifications.length === 0 ? (
+                      <div className="p-4 text-center text-gray-500">
+                        Không có thông báo gần đây
+                      </div>
+                    ) : (
+                      notifications.map((notification) => (
+                        <DropdownMenuItem
+                          key={notification.notificationId}
+                          className="flex flex-col items-start p-4 hover:bg-gray-50"
                         >
-                          {notification.message}
-                        </p>
-                        <span className="text-xs text-gray-500 mt-1">
-                          {notification.time}
-                        </span>
-                      </DropdownMenuItem>
-                    ))}
+                          <p
+                            className={cn(
+                              "text-sm",
+                              !notification.read && "font-medium"
+                            )}
+                          >
+                            {notification.message}
+                          </p>
+                          <span className="text-xs text-gray-500 mt-1">
+                            {formatTimeAgo(notification.timestamp)}
+                          </span>
+                        </DropdownMenuItem>
+                      ))
+                    )}
                   </TabsContent>
                   <TabsContent
                     value="unread"
                     className="max-h-[400px] overflow-y-auto"
                   >
-                    {unreadNotifications.map((notification) => (
-                      <DropdownMenuItem
-                        key={notification.id}
-                        className="flex flex-col items-start p-4"
-                      >
-                        <p className="text-sm font-medium">
-                          {notification.message}
-                        </p>
-                        <span className="text-xs text-gray-500 mt-1">
-                          {notification.time}
-                        </span>
-                      </DropdownMenuItem>
-                    ))}
+                    {loading ? (
+                      <div className="p-4 text-center text-gray-500">
+                        Đang tải...
+                      </div>
+                    ) : (
+                      notifications
+                        .filter((n) => !n.read)
+                        .map((notification) => (
+                          <DropdownMenuItem
+                            key={notification.notificationId}
+                            className="flex flex-col items-start p-4 hover:bg-gray-50"
+                          >
+                            <p className="text-sm font-medium">
+                              {notification.message}
+                            </p>
+                            <span className="text-xs text-gray-500 mt-1">
+                              {formatTimeAgo(notification.timestamp)}
+                            </span>
+                          </DropdownMenuItem>
+                        ))
+                    )}
                   </TabsContent>
                 </Tabs>
               </DropdownMenuContent>
@@ -169,11 +142,11 @@ export default function MainLayout({
               <DropdownMenuTrigger className="focus:outline-none">
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-gray-700">
-                    Nguyễn Trung Kiên
+                    {profile?.fullName || profile?.username}
                   </span>
                   <div className="w-8 h-8 rounded-full overflow-hidden">
                     <Image
-                      src="/images/avatar.png"
+                      src={profile?.avatar || "/images/avatar.png"}
                       alt="Avatar"
                       width={32}
                       height={32}
@@ -185,9 +158,11 @@ export default function MainLayout({
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium">Nguyễn Trung Kiên</p>
+                    <p className="text-sm font-medium">
+                      {profile?.fullName || profile?.username}
+                    </p>
                     <p className="text-xs text-muted-foreground">
-                      kien.nguyen@tdtu.edu.vn
+                      {profile?.email}
                     </p>
                   </div>
                 </DropdownMenuLabel>

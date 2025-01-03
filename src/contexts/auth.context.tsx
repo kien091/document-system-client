@@ -1,12 +1,21 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
 import { useRouter } from "next/navigation";
 import { authService } from "@/services/auth.service";
 import { LoginRequest, User, RegisterRequest } from "@/types/auth";
+import { UserProfile } from "@/types/user";
+import { userService } from "@/services/user.service";
 
 interface AuthContextType {
   user: User | null;
+  profile: UserProfile | null;
   loading: boolean;
   login: (data: LoginRequest) => Promise<void>;
   register: (data: RegisterRequest) => Promise<void>;
@@ -17,8 +26,36 @@ const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+
+  const logout = useCallback(() => {
+    authService.logout();
+    setUser(null);
+    router.push("/login");
+  }, [router]);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (user && authService.getToken()) {
+        try {
+          const response = await userService.getProfile();
+          setProfile(response.data);
+        } catch (error) {
+          console.error("Failed to fetch profile:", error);
+          if (
+            (error as { response?: { status?: number } })?.response?.status ===
+            401
+          ) {
+            logout();
+          }
+        }
+      }
+    };
+
+    fetchProfile();
+  }, [user, logout]);
 
   useEffect(() => {
     const user = authService.getCurrentUser();
@@ -53,14 +90,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const logout = () => {
-    authService.logout();
-    setUser(null);
-    router.push("/login");
-  };
-
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+    <AuthContext.Provider
+      value={{ user, profile, loading, login, register, logout }}
+    >
       {children}
     </AuthContext.Provider>
   );

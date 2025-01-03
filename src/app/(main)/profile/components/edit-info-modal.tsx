@@ -52,7 +52,7 @@ export function EditInfoModal({
             <Button variant="outline" type="button" onClick={onClose}>
               Hủy
             </Button>
-            <Button type="submit">Lưu thay đổi</Button>
+            <Button type="submit" className="bg-[#dc2626] hover:bg-[#dc2626]/80">Lưu thay đổi</Button>
           </div>
         </form>
       </DialogContent>

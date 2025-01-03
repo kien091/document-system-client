@@ -22,6 +22,7 @@ export interface User {
 export interface RegisterRequest {
     email: string;
     username: string;
+    fullName: string;
     password: string;
     confirmPassword: string;
 }

@@ -5,12 +5,14 @@ import { Camera, PencilIcon } from "lucide-react";
 import { useState } from "react";
 import { UploadImageModal } from "./components/upload-image-modal";
 import { EditInfoModal } from "./components/edit-info-modal";
+import { EditNameModal } from "@/app/(main)/profile/components/edit-name-modal";
 
 export default function ProfilePage() {
   const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
   const [isCoverModalOpen, setIsCoverModalOpen] = useState(false);
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
   const [isDepartmentModalOpen, setIsDepartmentModalOpen] = useState(false);
+  const [isNameModalOpen, setIsNameModalOpen] = useState(false);
 
   const contactFields = [
     { label: "Email", value: "52100752@student.tdtu.edu.vn", id: "email" },
@@ -28,7 +30,7 @@ export default function ProfilePage() {
   ];
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gray-50/30">
       {/* Cover Image & Profile Section */}
       <div className="relative">
         <div className="max-w-7xl mx-auto bg-white rounded-md shadow-[4px_4px_10px_rgba(0,0,0,0.2)] mb-5">
@@ -68,10 +70,20 @@ export default function ProfilePage() {
             </div>
             {/* Name & Title */}
             <div className="mt-4">
-              <h1 className="text-2xl font-semibold">Nguyễn Trung Kiên</h1>
-              <p className="text-gray-600">
-                Giảng viên (Khoa Công nghệ thông tin)
-              </p>
+              <div className="flex items-center gap-2">
+                <h1 className="text-2xl font-semibold">
+                  Nguyễn Trung Kiên (Vinny)
+                </h1>
+                <button
+                  onClick={() => setIsNameModalOpen(true)}
+                  className="hover:text-gray-600 mt-2"
+                >
+                  <PencilIcon className="w-6.5 h-6.5 text-gray-400 hover:text-gray-600 hover:bg-gray-200 rounded-md p-1" />
+                </button>
+              </div>
+                <p className="text-gray-600">
+                  Giảng viên (Khoa Công nghệ thông tin)
+                </p>
             </div>
           </div>
         </div>
@@ -84,7 +96,7 @@ export default function ProfilePage() {
               <div className="flex items-center justify-between mb-4 pb-2.5 border-b border-gray-300">
                 <h2 className="text-lg font-semibold">Liên lạc</h2>
                 <button onClick={() => setIsContactModalOpen(true)}>
-                  <PencilIcon className="w-5 h-5 text-gray-400 hover:text-gray-600" />
+                  <PencilIcon className="w-6.5 h-6.5 text-gray-400 hover:text-gray-600 hover:bg-gray-200 rounded-md p-1" />
                 </button>
               </div>
               <div className="space-y-4">
@@ -104,7 +116,7 @@ export default function ProfilePage() {
               <div className="flex items-center justify-between mb-4 pb-2.5 border-b border-gray-300">
                 <h2 className="text-lg font-semibold">Phòng ban</h2>
                 <button onClick={() => setIsDepartmentModalOpen(true)}>
-                  <PencilIcon className="w-5 h-5 text-gray-400 hover:text-gray-600" />
+                  <PencilIcon className="w-6.5 h-6.5 text-gray-400 hover:text-gray-600 hover:bg-gray-200 rounded-md p-1" />
                 </button>
               </div>
               <div className="space-y-4">
@@ -131,7 +143,10 @@ export default function ProfilePage() {
                 <div className="col-span-3">
                   <div className="flex gap-4 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
                     {[1, 2, 3, 4, 5, 6].map((_, index) => (
-                      <div key={index} className="flex-none w-[32%] first:ml-0 mb-4">
+                      <div
+                        key={index}
+                        className="flex-none w-[32%] first:ml-0 mb-4"
+                      >
                         <div className="bg-white p-4 rounded-lg shadow">
                           <Image
                             src="/images/news/thongbao.jpg"
@@ -153,33 +168,37 @@ export default function ProfilePage() {
             </div>
           </div>
         </div>
-
-        {/* Modals */}
-        <EditInfoModal
-          isOpen={isContactModalOpen}
-          onClose={() => setIsContactModalOpen(false)}
-          title="Thông tin liên lạc"
-          fields={contactFields}
-        />
-        <EditInfoModal
-          isOpen={isDepartmentModalOpen}
-          onClose={() => setIsDepartmentModalOpen(false)}
-          title="Thông tin phòng ban"
-          fields={departmentFields}
-        />
-        <UploadImageModal
-          isOpen={isAvatarModalOpen}
-          onClose={() => setIsAvatarModalOpen(false)}
-          title="Cập nhật ảnh đại diện"
-          aspectRatio="square"
-        />
-        <UploadImageModal
-          isOpen={isCoverModalOpen}
-          onClose={() => setIsCoverModalOpen(false)}
-          title="Cập nhật ảnh bìa"
-          aspectRatio="cover"
-        />
       </div>
+
+      {/* Modals */}
+      <EditInfoModal
+        isOpen={isContactModalOpen}
+        onClose={() => setIsContactModalOpen(false)}
+        title="Thông tin liên lạc"
+        fields={contactFields}
+      />
+      <EditInfoModal
+        isOpen={isDepartmentModalOpen}
+        onClose={() => setIsDepartmentModalOpen(false)}
+        title="Thông tin phòng ban"
+        fields={departmentFields}
+      />
+      <UploadImageModal
+        isOpen={isAvatarModalOpen}
+        onClose={() => setIsAvatarModalOpen(false)}
+        title="Cập nhật ảnh đại diện"
+        aspectRatio="square"
+      />
+      <UploadImageModal
+        isOpen={isCoverModalOpen}
+        onClose={() => setIsCoverModalOpen(false)}
+        title="Cập nhật ảnh bìa"
+        aspectRatio="cover"
+      />
+      <EditNameModal
+        isOpen={isNameModalOpen}
+        onClose={() => setIsNameModalOpen(false)}
+      />
     </div>
   );
 }

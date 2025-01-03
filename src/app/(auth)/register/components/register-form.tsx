@@ -17,6 +17,7 @@ export function RegisterForm() {
   const [formData, setFormData] = useState({
     email: "",
     username: "",
+    fullName: "",
     password: "",
     confirmPassword: "",
   });
@@ -70,9 +71,21 @@ export function RegisterForm() {
               <Input
                 type="text"
                 name="username"
-                placeholder="Tên người dùng"
+                placeholder="Tên đăng nhập"
                 className="pl-10"
                 value={formData.username}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div className="relative">
+              <User className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+              <Input
+                type="text"
+                name="fullName"
+                placeholder="Họ và tên"
+                className="pl-10"
+                value={formData.fullName}
                 onChange={handleChange}
                 required
               />
