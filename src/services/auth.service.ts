@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { LoginRequest, LoginResponse, RegisterRequest, RegisterResponse } from '@/types/auth';
+import { LoginRequest, LoginResponse, RegisterRequest, RegisterResponse, SendOTPRequest, SendOTPResponse, VerifyOTPRequest, VerifyOTPResponse, ResetPasswordRequest, ResetPasswordResponse } from '@/types/auth';
 
 const API_URL = 'http://localhost:8080/api';
 
@@ -26,6 +26,21 @@ export const authService = {
         return response.data;
     },
 
+    async sendOTP(data: SendOTPRequest): Promise<SendOTPResponse> {
+        const response = await axiosInstance.post<SendOTPResponse>('/auth/send-otp', data);
+        return response.data;
+    },
+    
+    async verifyOTP(data: VerifyOTPRequest): Promise<VerifyOTPResponse> {
+        const response = await axiosInstance.post<VerifyOTPResponse>('/auth/verify-otp', data);
+        return response.data;
+    },
+    
+    async resetPassword(data: ResetPasswordRequest): Promise<ResetPasswordResponse> {
+        const response = await axiosInstance.post<ResetPasswordResponse>('/auth/reset-password', data);
+        return response.data;
+    },
+    
     async register(data: RegisterRequest): Promise<RegisterResponse> {
         const response = await axiosInstance.post<RegisterResponse>('/auth/register', data);
         return response.data;
@@ -45,5 +60,6 @@ export const authService = {
 
     getToken() {
         return localStorage.getItem('token');
-    }
+    },
+
 };

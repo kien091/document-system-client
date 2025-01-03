@@ -95,3 +95,39 @@ export interface RegisterResponse {
         trackings: Tracking[] | null;
     }
 }
+
+export interface SendOTPRequest {
+    to: string;
+}
+
+export interface SendOTPResponse {
+    message: string;
+    data: {
+        success: boolean;
+        message: string;
+    }
+}
+
+export interface VerifyOTPRequest {
+    email: string;
+    otp: string;
+}
+
+export interface VerifyOTPResponse {
+    message: string;
+    data: {
+        resetToken: string;
+    }
+}
+
+export interface ResetPasswordRequest {
+    email: string;
+    resetToken: string;
+    newPassword: string;
+    confirmPassword: string;
+}
+
+export interface ResetPasswordResponse {
+    message: string;
+    data: null;
+}
