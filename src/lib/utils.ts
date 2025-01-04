@@ -1,5 +1,7 @@
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
+import { format } from 'date-fns';
+import { vi } from 'date-fns/locale';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -20,3 +22,7 @@ export function formatTimeAgo(timestamp: string): string {
 
   return date.toLocaleString("vi-VN");
 }
+
+export const formatDateTime = (date: string) => {
+  return format(new Date(date), 'HH:mm - dd/MM/yyyy', { locale: vi });
+};

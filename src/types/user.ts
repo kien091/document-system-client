@@ -1,3 +1,10 @@
+interface Department {
+    departmentId: string;
+    name: string;
+    description?: string;
+    location: string;
+}
+
 export interface UserProfile {
     userId: string;
     username: string;
@@ -9,7 +16,7 @@ export interface UserProfile {
     position: string | null;
     role: string;
     status: string;
-    department: string | null;
+    department: Department | null;
 }
 
 export interface UserProfileResponse {

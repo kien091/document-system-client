@@ -2,29 +2,68 @@
 
 import Image from "next/image";
 import { Camera, PencilIcon } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { UploadImageModal } from "./components/upload-image-modal";
 import { EditInfoModal } from "./components/edit-info-modal";
 import { EditNameModal } from "@/app/(main)/profile/components/edit-name-modal";
+import { axiosInstance } from "@/lib/axios";
+import { UserProfile } from "@/types/user";
+
+interface Document {
+  documentId: string;
+  title: string;
+}
 
 export default function ProfilePage() {
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
   const [isCoverModalOpen, setIsCoverModalOpen] = useState(false);
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
   const [isDepartmentModalOpen, setIsDepartmentModalOpen] = useState(false);
   const [isNameModalOpen, setIsNameModalOpen] = useState(false);
+  const [recentDocuments, setRecentDocuments] = useState<Document[]>([]);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const response = await axiosInstance.get("/users/me");
+        setProfile(response.data.data);
+      } catch (error) {
+        console.error("Error fetching profile:", error);
+      }
+    };
+
+    fetchProfile();
+  }, []);
+
+  useEffect(() => {
+    const fetchRecentDocuments = async () => {
+      try {
+        const response = await axiosInstance.get("/documents/recent");
+        setRecentDocuments(response.data || []);
+        console.log("Kien", response.data);
+      } catch (error) {
+        console.error("Error fetching recent documents:", error);
+      }
+    };
+
+    fetchRecentDocuments();
+  }, []);
 
   const contactFields = [
-    { label: "Email", value: "52100752@student.tdtu.edu.vn", id: "email" },
-    { label: "Phone Number", value: "0945454086", id: "phone" },
+    { label: "Email", value: profile?.email ?? "", id: "email" },
+    {
+      label: "Phone Number",
+      value: profile?.phone ?? "",
+      id: "phone",
+    },
   ];
 
   const departmentFields = [
     { label: "Phone", value: "(028) 37755046", id: "deptPhone" },
     {
       label: "Address",
-      value:
-        "Phòng C004, Số 19 Nguyễn Hữu Thọ, P. Tân Phong, Quận 7, Tp. Hồ Chí Minh",
+      value: profile?.department?.location ?? "",
       id: "address",
     },
   ];
@@ -37,7 +76,7 @@ export default function ProfilePage() {
           {/* Cover Image */}
           <div className="h-64 w-full relative">
             <Image
-              src="/images/background.jpg"
+              src={profile?.background || "/images/background.jpg"}
               alt="Cover"
               fill
               className="object-cover rounded-tr-md rounded-tl-md"
@@ -56,7 +95,7 @@ export default function ProfilePage() {
             {/* Avatar */}
             <div className="relative w-40 h-40 rounded-full overflow-hidden border-4 border-white group">
               <Image
-                src="/images/avatar.png"
+                src={profile?.avatar || "/images/avatar.png"}
                 alt="Profile"
                 fill
                 className="object-cover"
@@ -72,7 +111,8 @@ export default function ProfilePage() {
             <div className="mt-4">
               <div className="flex items-center gap-2">
                 <h1 className="text-2xl font-semibold">
-                  Nguyễn Trung Kiên (Vinny)
+                  {profile?.fullName ?? "Loading..."} (
+                  {profile?.username ?? "Loading..."})
                 </h1>
                 <button
                   onClick={() => setIsNameModalOpen(true)}
@@ -81,9 +121,10 @@ export default function ProfilePage() {
                   <PencilIcon className="w-6.5 h-6.5 text-gray-400 hover:text-gray-600 hover:bg-gray-200 rounded-md p-1" />
                 </button>
               </div>
-                <p className="text-gray-600">
-                  Giảng viên (Khoa Công nghệ thông tin)
-                </p>
+              <p className="text-gray-600">
+                {profile?.position ?? "Chưa cập nhật"} (
+                {profile?.department?.name ?? "Chưa cập nhật"})
+              </p>
             </div>
           </div>
         </div>
@@ -102,11 +143,11 @@ export default function ProfilePage() {
               <div className="space-y-4">
                 <div>
                   <p className="text-gray-600 mb-1">Email</p>
-                  <p>52100752@student.tdtu.edu.vn</p>
+                  <p>{profile?.email}</p>
                 </div>
                 <div>
                   <p className="text-gray-600 mb-1">Số điện thoại</p>
-                  <p>0945454086</p>
+                  <p>{profile?.phone ?? "Chưa cập nhật"}</p>
                 </div>
               </div>
             </div>
@@ -126,10 +167,7 @@ export default function ProfilePage() {
                 </div>
                 <div>
                   <p className="text-gray-600 mb-1">Địa chỉ</p>
-                  <p>
-                    Phòng C004, Số 19 Nguyễn Hữu Thọ, P. Tân Phong, Quận 7, Tp.
-                    Hồ Chí Minh
-                  </p>
+                  <p>{profile?.department?.location ?? "Chưa cập nhật"}</p>
                 </div>
               </div>
             </div>
@@ -142,9 +180,9 @@ export default function ProfilePage() {
               <div className="grid grid-cols-3 gap-4 overflow-hidden">
                 <div className="col-span-3">
                   <div className="flex gap-4 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-                    {[1, 2, 3, 4, 5, 6].map((_, index) => (
+                    {recentDocuments.map((doc) => (
                       <div
-                        key={index}
+                        key={doc.documentId}
                         className="flex-none w-[32%] first:ml-0 mb-4"
                       >
                         <div className="bg-white p-4 rounded-lg shadow">
@@ -156,8 +194,7 @@ export default function ProfilePage() {
                             className="w-full rounded-md mb-3"
                           />
                           <h3 className="font-medium mb-1 line-clamp-2">
-                            Thông báo lịch nghỉ Tết Dương lịch và Tết Nguyên đán
-                            Giáp Thìn 2024
+                            {doc.title}
                           </h3>
                         </div>
                       </div>

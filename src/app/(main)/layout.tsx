@@ -23,6 +23,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/auth.context";
 import { useNotifications } from "@/contexts/notification.context";
+import Link from "next/link";
 
 export default function MainLayout({
   children,
@@ -39,18 +40,20 @@ export default function MainLayout({
       <header className="bg-white border-b sticky top-0 z-50">
         <div className="flex h-16 items-center px-6 justify-between">
           <div className="flex items-center gap-2">
-            <Image
-              src="/images/logo/logo.webp"
-              alt="TDT Logo"
-              width={65}
-              height={65}
-            />
-            <h1 className="text-xl font-semibold italic font-inriaSans">
-              Hệ thống công văn
-              <span className="block text-sm font-normal">
-                Khoa Công nghệ thông tin
-              </span>
-            </h1>
+            <Link href="/dashboard" className="flex items-center gap-2">
+              <Image
+                src="/images/logo/logo.webp"
+                alt="TDT Logo"
+                width={65}
+                height={65}
+              />
+              <h1 className="text-xl font-semibold italic font-inriaSans">
+                Hệ thống công văn
+                <span className="block text-sm font-normal">
+                  Khoa Công nghệ thông tin
+                </span>
+              </h1>
+            </Link>
           </div>
           <div className="flex items-center gap-4">
             <DropdownMenu>
@@ -85,8 +88,15 @@ export default function MainLayout({
                         Đang tải...
                       </div>
                     ) : notifications.length === 0 ? (
-                      <div className="p-4 text-center text-gray-500">
-                        Không có thông báo gần đây
+                      <div className="p-8 text-center text-gray-500">
+                        <Image
+                          src="/images/icon/empty-notification.jpg"
+                          alt="Empty Notification"
+                          width={200}
+                          height={125}
+                          className="w-[100px] mx-auto rounded-md mb-3"
+                        />
+                        <p>Không có thông báo gần đây</p>
                       </div>
                     ) : (
                       notifications.map((notification) => (
@@ -116,6 +126,17 @@ export default function MainLayout({
                     {loading ? (
                       <div className="p-4 text-center text-gray-500">
                         Đang tải...
+                      </div>
+                    ) : notifications.filter((n) => !n.read).length === 0 ? (
+                      <div className="p-8 text-center text-gray-500">
+                        <Image
+                          src="/images/icon/empty-notification.jpg"
+                          alt="Empty Notification"
+                          width={200}
+                          height={125}
+                          className="w-[100px] mx-auto rounded-md mb-3"
+                        />
+                        <p>Không có thông báo chưa đọc</p>
                       </div>
                     ) : (
                       notifications

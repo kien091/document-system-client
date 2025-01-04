@@ -22,6 +22,8 @@ import {
 } from "@/components/ui/carousel";
 import Image from "next/image";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useDocuments } from "@/contexts/document.context";
+import { formatDateTime } from "@/lib/utils";
 
 const carouselImages = [
   "/images/carousel/carousel-1.png",
@@ -32,6 +34,20 @@ const carouselImages = [
 export default function DashboardPage() {
   const [api, setApi] = useState<CarouselApi>();
   const [current, setCurrent] = useState(0);
+  const [activeTab, setActiveTab] = useState<"incoming" | "outgoing">(
+    "incoming"
+  );
+  const {
+    recentIncoming,
+    recentOutgoing,
+    loading: documentLoading,
+  } = useDocuments();
+
+  console.log("Dashboard Data:", {
+    recentIncoming,
+    recentOutgoing,
+    documentLoading,
+  });
 
   useEffect(() => {
     if (!api) return;
@@ -187,147 +203,69 @@ export default function DashboardPage() {
           <div className="bg-white p-4 rounded-lg shadow">
             <h2 className="text-xl font-semibold mb-4 flex items-center gap-2 text-blue-600">
               <FileText className="w-6 h-6" />
-              CÔNG VĂN
+              CÔNG VĂN MỚI NHẤT
             </h2>
-            <Tabs defaultValue="incoming" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mb-4">
-                <TabsTrigger value="incoming">Công văn đến</TabsTrigger>
-                <TabsTrigger value="outgoing">Công văn đi</TabsTrigger>
-              </TabsList>
-              <TabsContent value="incoming">
-                <div className="space-y-4">
-                  <div className="border-b pb-3">
-                    <a href="#" className="group">
-                      <h3 className="font-medium group-hover:text-blue-600">
-                        Công văn số 61/2024/PTC-TB về việc nộp phí ký túc xá
-                        HK2/2024-2025
-                      </h3>
-                      <p className="text-sm text-gray-500 mt-1">31/12/2024</p>
-                    </a>
-                  </div>
-                  <div className="border-b pb-3">
-                    <a href="#" className="group">
-                      <h3 className="font-medium group-hover:text-blue-600">
-                        Công văn số 60/2024/PTC-TB về lịch thi chứng chỉ MOS
-                        quốc tế
-                      </h3>
-                      <p className="text-sm text-gray-500 mt-1">31/12/2024</p>
-                    </a>
-                  </div>
-                  <div className="border-b pb-3">
-                    <a href="#" className="group">
-                      <h3 className="font-medium group-hover:text-blue-600">
-                        Công văn số 60/2024/PTC-TB về lịch thi chứng chỉ MOS
-                        quốc tế
-                      </h3>
-                      <p className="text-sm text-gray-500 mt-1">31/12/2024</p>
-                    </a>
-                  </div>
-                  <div className="border-b pb-3">
-                    <a href="#" className="group">
-                      <h3 className="font-medium group-hover:text-blue-600">
-                        Công văn số 60/2024/PTC-TB về lịch thi chứng chỉ MOS
-                        quốc tế
-                      </h3>
-                      <p className="text-sm text-gray-500 mt-1">31/12/2024</p>
-                    </a>
-                  </div>
-                  <div className="border-b pb-3">
-                    <a href="#" className="group">
-                      <h3 className="font-medium group-hover:text-blue-600">
-                        Công văn số 60/2024/PTC-TB về lịch thi chứng chỉ MOS
-                        quốc tế
-                      </h3>
-                      <p className="text-sm text-gray-500 mt-1">31/12/2024</p>
-                    </a>
-                  </div>
-                  <div className="border-b pb-3">
-                    <a href="#" className="group">
-                      <h3 className="font-medium group-hover:text-blue-600">
-                        Công văn số 60/2024/PTC-TB về lịch thi chứng chỉ MOS
-                        quốc tế
-                      </h3>
-                      <p className="text-sm text-gray-500 mt-1">31/12/2024</p>
-                    </a>
-                  </div>
-                  <div className="border-b pb-3">
-                    <a href="#" className="group">
-                      <h3 className="font-medium group-hover:text-blue-600">
-                        Công văn số 60/2024/PTC-TB về lịch thi chứng chỉ MOS
-                        quốc tế
-                      </h3>
-                      <p className="text-sm text-gray-500 mt-1">31/12/2024</p>
-                    </a>
-                  </div>
+
+            {documentLoading ? (
+              <div>Đang tải...</div>
+            ) : (
+              <Tabs
+                defaultValue="incoming"
+                className="w-full"
+                onValueChange={(value) =>
+                  setActiveTab(value as "incoming" | "outgoing")
+                }
+              >
+                <TabsList className="grid w-full grid-cols-2 mb-4">
+                  <TabsTrigger value="incoming">Công văn đến</TabsTrigger>
+                  <TabsTrigger value="outgoing">Công văn đi</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="incoming" className="space-y-4">
+                  {recentIncoming.slice(0, 7).map((doc) => (
+                    <div key={doc.documentId} className="border-b pb-3">
+                      <a href="#" className="group">
+                        <h3 className="font-medium group-hover:text-blue-600">
+                          {doc.title}
+                        </h3>
+                        <p className="text-sm text-gray-500 mt-1">
+                          {formatDateTime(doc.createdAt)}
+                        </p>
+                      </a>
+                    </div>
+                  ))}
+                </TabsContent>
+
+                <TabsContent value="outgoing" className="space-y-4">
+                  {recentOutgoing.slice(0, 7).map((doc) => (
+                    <div key={doc.documentId} className="border-b pb-3">
+                      <a href="#" className="group">
+                        <h3 className="font-medium group-hover:text-blue-600">
+                          {doc.title}
+                        </h3>
+                        <p className="text-sm text-gray-500 mt-1">
+                          {formatDateTime(doc.createdAt)}
+                        </p>
+                      </a>
+                    </div>
+                  ))}
+                </TabsContent>
+
+                <div className="mt-6 text-center">
+                  <a
+                    href={
+                      activeTab === "incoming"
+                        ? "/incoming-documents"
+                        : "/outgoing-documents"
+                    }
+                    className="text-blue-600 hover:underline text-sm"
+                  >
+                    Xem tất cả công văn{" "}
+                    {activeTab === "incoming" ? "đến" : "đi"}
+                  </a>
                 </div>
-              </TabsContent>
-              <TabsContent value="outgoing">
-                <div className="space-y-4">
-                  <div className="border-b pb-3">
-                    <a href="#" className="group">
-                      <h3 className="font-medium group-hover:text-blue-600">
-                        Công văn số 45/2024/CV-CNTT về việc đề xuất mua sắm
-                        thiết bị
-                      </h3>
-                      <p className="text-sm text-gray-500 mt-1">30/12/2024</p>
-                    </a>
-                  </div>
-                  <div className="border-b pb-3">
-                    <a href="#" className="group">
-                      <h3 className="font-medium group-hover:text-blue-600">
-                        Công văn số 44/2024/CV-CNTT về kế hoạch tổ chức hội thảo
-                      </h3>
-                      <p className="text-sm text-gray-500 mt-1">29/12/2024</p>
-                    </a>
-                  </div>
-                  <div className="border-b pb-3">
-                    <a href="#" className="group">
-                      <h3 className="font-medium group-hover:text-blue-600">
-                        Công văn số 44/2024/CV-CNTT về kế hoạch tổ chức hội thảo
-                      </h3>
-                      <p className="text-sm text-gray-500 mt-1">29/12/2024</p>
-                    </a>
-                  </div>
-                  <div className="border-b pb-3">
-                    <a href="#" className="group">
-                      <h3 className="font-medium group-hover:text-blue-600">
-                        Công văn số 44/2024/CV-CNTT về kế hoạch tổ chức hội thảo
-                      </h3>
-                      <p className="text-sm text-gray-500 mt-1">29/12/2024</p>
-                    </a>
-                  </div>
-                  <div className="border-b pb-3">
-                    <a href="#" className="group">
-                      <h3 className="font-medium group-hover:text-blue-600">
-                        Công văn số 44/2024/CV-CNTT về kế hoạch tổ chức hội thảo
-                      </h3>
-                      <p className="text-sm text-gray-500 mt-1">29/12/2024</p>
-                    </a>
-                  </div>
-                  <div className="border-b pb-3">
-                    <a href="#" className="group">
-                      <h3 className="font-medium group-hover:text-blue-600">
-                        Công văn số 44/2024/CV-CNTT về kế hoạch tổ chức hội thảo
-                      </h3>
-                      <p className="text-sm text-gray-500 mt-1">29/12/2024</p>
-                    </a>
-                  </div>
-                  <div className="border-b pb-3">
-                    <a href="#" className="group">
-                      <h3 className="font-medium group-hover:text-blue-600">
-                        Công văn số 44/2024/CV-CNTT về kế hoạch tổ chức hội thảo
-                      </h3>
-                      <p className="text-sm text-gray-500 mt-1">29/12/2024</p>
-                    </a>
-                  </div>
-                </div>
-              </TabsContent>
-            </Tabs>
-            <div className="mt-4 text-center">
-              <a href="#" className="text-blue-600 hover:underline text-sm">
-                Xem tất cả công văn
-              </a>
-            </div>
+              </Tabs>
+            )}
           </div>
         </div>
       </div>
