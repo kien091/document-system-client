@@ -412,7 +412,7 @@ export default function IncomingDocumentsPage() {
   }, [searchTerm]);
 
   const handlePrint = () => {
-    const fileUrl = "/files/601.BTTTT-CNTT.pdf"; // path to your file
+    const fileUrl = "/files/162.2020.TDT-TB.pdf"; // path to your file
     const fileType = fileUrl.split(".").pop()?.toLowerCase();
 
     if (fileType === "xlsx" || fileType === "xls") {
@@ -781,7 +781,7 @@ export default function IncomingDocumentsPage() {
                       height={24}
                     />
                     <span className="text-sm text-gray-600">
-                      601.BTTTT-CNTT.pdf (2.35MB)
+                      162/2020/TDTU-TB.pdf (2.35MB)
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
@@ -1124,7 +1124,7 @@ export default function IncomingDocumentsPage() {
       <PreviewModal
         isOpen={isPreviewOpen}
         onClose={() => setIsPreviewOpen(false)}
-        fileUrl="/files/601.BTTTT-CNTT.pdf" // path to file
+        fileUrl="/files/162.2020.TDT-TB.pdf" // path to file
         fileType="pdf" // type of file
       />
 
