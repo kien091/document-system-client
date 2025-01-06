@@ -3,10 +3,10 @@ import { Document } from '@/types/document';
 import { ApiResponse } from '@/types/document';
 
 export const documentService = {
-    getRecentDocuments: async (type: string): Promise<Document[]> => {
+    getRecentDocuments: async (type: string, limit: number = 7): Promise<Document[]> => {
         try {
             const response = await axiosInstance.get<Document[]>(
-                `/documents/recent?type=${type}`
+                `/documents/recent?type=${type}&limit=${limit}`
             );
             return response.data;
         } catch (error) {

@@ -2,7 +2,7 @@ import { axiosInstance } from '@/lib/axios';
 import { NotificationResponse } from '@/types/notification';
 
 export const notificationService = {
-    async getNotifications(userId: string): Promise<NotificationResponse> {
+    getNotifications: async (userId: string): Promise<NotificationResponse> => {
         try {
             const response = await axiosInstance.get<NotificationResponse>(
                 `/notifications?userId=${userId}`
