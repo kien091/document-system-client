@@ -5,6 +5,7 @@ import { Inria_Sans } from "next/font/google";
 import { AuthProvider } from "@/contexts/auth.context";
 import { NotificationProvider } from "@/contexts/notification.context";
 import { DocumentProvider } from "@/contexts/document.context";
+import { UserProvider } from "@/contexts/user.context";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -37,11 +38,13 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${inriaSans.variable} font-sans antialiased`}
       >
-        <DocumentProvider>
-          <AuthProvider>
-            <NotificationProvider>{children}</NotificationProvider>
-          </AuthProvider>
-        </DocumentProvider>
+        <AuthProvider>
+          <UserProvider>
+            <DocumentProvider>
+                <NotificationProvider>{children}</NotificationProvider>
+            </DocumentProvider>
+          </UserProvider>
+        </AuthProvider>
       </body>
     </html>
   );

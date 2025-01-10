@@ -3,7 +3,7 @@ import { authService } from './auth.service';
 import { UserProfileResponse } from '@/types/user';
 
 export const userService = {
-    async getProfile(): Promise<UserProfileResponse> {
+    getProfile: async (): Promise<UserProfileResponse> => {
         try {
             const response = await axiosInstance.get<UserProfileResponse>('/users/me');
             return response.data;
@@ -13,5 +13,21 @@ export const userService = {
             }
             throw error;
         }
-    }
+    },
+
+    updateProfile: async (id: string, data: FormData): Promise<UserProfileResponse> => {
+        try {
+            for (const pair of data.entries()) {
+                console.log("FormData entry:", pair[0], pair[1]);
+            }
+            const response = await axiosInstance.put<UserProfileResponse>(`/users/update-profile/${id}`, data, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
+            return response.data;
+        } catch (error: unknown) {
+            throw error;
+        }
+    },
 }; 

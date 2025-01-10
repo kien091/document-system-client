@@ -46,7 +46,7 @@ export default function ProfileLayout({
             {!isCollapsed && "Công văn đến"}
           </a>
           <a
-            href="#"
+            href="/outgoing-documents"
             className={`flex items-center gap-3 px-4 py-3 hover:bg-gray-100 ${
               isCollapsed ? "justify-center" : ""
             }`}

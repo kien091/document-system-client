@@ -42,11 +42,9 @@ export function NotificationProvider({
 
     try {
       setLoading(true);
-      console.log("Fetching notifications for userId:", profile.userId);
       const response = await notificationService.getNotifications(
         profile.userId
       );
-      console.log("Notification response:", response);
       setNotifications(response.data.notifications);
       setUnreadCount(response.data.unreadCount);
       setError(null);

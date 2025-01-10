@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const config: NextConfig = {
   images: {
-    domains: ['res.cloudinary.com']
+    domains: ['bucket-document-system.s3.ap-southeast-1.amazonaws.com']
   }
 };
 

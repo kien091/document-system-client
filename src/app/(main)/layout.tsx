@@ -46,6 +46,8 @@ export default function MainLayout({
                 alt="TDT Logo"
                 width={65}
                 height={65}
+                priority
+                className="w-[65px] aspect-square object-contain"
               />
               <h1 className="text-xl font-semibold italic font-inriaSans">
                 Hệ thống công văn
@@ -167,7 +169,7 @@ export default function MainLayout({
                   </span>
                   <div className="w-8 h-8 rounded-full overflow-hidden">
                     <Image
-                      src={profile?.avatar || "/images/avatar.png"}
+                      src={profile?.avatar || "/images/Vinny.png"}
                       alt="Avatar"
                       width={32}
                       height={32}
@@ -218,7 +220,6 @@ export default function MainLayout({
     </div>
   );
 }
-
 const Footer = () => {
   return (
     <footer className="bg-[#333333] text-white">
@@ -231,7 +232,8 @@ const Footer = () => {
                 src="/images/logo/logo.webp"
                 alt="TDT Logo"
                 width={80}
-                height={30}
+                height={80}
+                className="w-[80px] aspect-square object-contain"
               />
               <div>
                 <h3 className="font-medium">ĐẠI HỌC TÔN ĐỨC THẮNG</h3>

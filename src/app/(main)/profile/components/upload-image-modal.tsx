@@ -9,12 +9,15 @@ import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { useState } from "react";
 import { Upload, X } from "lucide-react";
+import { useUser } from "@/contexts/user.context";
 
 interface UploadImageModalProps {
   isOpen: boolean;
   onClose: () => void;
   title: string;
   aspectRatio?: "square" | "cover";
+  type: "avatarFile" | "backgroundFile";
+  userId: string;
 }
 
 export function UploadImageModal({
@@ -22,13 +25,19 @@ export function UploadImageModal({
   onClose,
   title,
   aspectRatio = "square",
+  type,
+  userId,
 }: UploadImageModalProps) {
+  const { updateProfile } = useUser();
   const [preview, setPreview] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      console.log("Selected file:", file);
+      setFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
         setPreview(reader.result as string);
@@ -37,10 +46,26 @@ export function UploadImageModal({
     }
   };
 
-  const handleUpload = () => {
-    // TODO: Handle upload logic here
-    onClose();
-    setPreview(null);
+  const handleUpload = async () => {
+    if (!file || !userId) return;
+
+    try {
+      const formData = new FormData();
+
+      if (type === "avatarFile") {
+        formData.append("avatarFile", file);
+      } else {
+        formData.append("backgroundFile", file);
+      }
+
+      await updateProfile(userId, formData);
+      onClose();
+      setPreview(null);
+      setFile(null);
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
+      console.error("Upload error:", err.response?.data || error);
+    }
   };
 
   const handleDrag = (e: React.DragEvent) => {
@@ -70,7 +95,7 @@ export function UploadImageModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md" aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>

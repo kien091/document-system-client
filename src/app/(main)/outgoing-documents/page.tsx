@@ -23,6 +23,7 @@ import AddDocumentModal from "./components/AddDocumentModal";
 import FilterDocumentModal from "./components/FilterDocumentModal";
 import PreviewModal from "./components/PreviewModal";
 import AddTaskModal from "./components/AddTaskModal";
+import SigningModal from "./components/SigningModal";
 
 interface DocumentType {
   id: number;
@@ -111,6 +112,7 @@ export default function IncomingDocumentsPage() {
   const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
   const [editContent, setEditContent] = useState("");
   const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
+  const [isSigningModalOpen, setIsSigningModalOpen] = useState(false);
 
   const documents = [
     {
@@ -1012,9 +1014,14 @@ export default function IncomingDocumentsPage() {
                               </div>
                             </div>
                           </div>
-                          <button className="p-1.5 hover:bg-gray-100 rounded-full">
-                            <MoreVertical className="w-4 h-4 text-gray-500" />
-                          </button>
+                          <div className="relative">
+                            <button
+                              className="p-1.5 hover:bg-gray-100 rounded-full"
+                              onClick={() => setIsSigningModalOpen(true)}
+                            >
+                              <MoreVertical className="w-4 h-4 text-gray-500" />
+                            </button>
+                          </div>
                         </div>
                       ))}
 
@@ -1131,6 +1138,12 @@ export default function IncomingDocumentsPage() {
       <AddTaskModal
         isOpen={isAddTaskModalOpen}
         onClose={() => setIsAddTaskModalOpen(false)}
+      />
+
+      <SigningModal
+        isOpen={isSigningModalOpen}
+        onClose={() => setIsSigningModalOpen(false)}
+        fileUrl="https://bucket-document-system.s3.ap-southeast-1.amazonaws.com/documents/word/446303a6-0e44-4832-b86e-b5034a09e587_161.2020.TDT-TB.docx"
       />
     </div>
   );

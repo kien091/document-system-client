@@ -1,9 +1,23 @@
 interface Department {
     departmentId: string;
     name: string;
+    hotline: string;
     description?: string;
     location: string;
 }
+
+export interface UpdateProfileRequest {
+    userName?: string;
+    fullName?: string;
+    position?: string;
+    email?: string;
+    phone?: string;
+    avatarFile?: File;
+    backgroundFile?: File;
+}
+
+export type UserStatus = 'ACTIVE' | 'INACTIVE' | 'LOCKED';
+export type UserRole = 'ADMIN' | 'USER';
 
 export interface UserProfile {
     userId: string;
@@ -14,8 +28,8 @@ export interface UserProfile {
     email: string;
     phone: string | null;
     position: string | null;
-    role: string;
-    status: string;
+    role: UserRole;
+    status: UserStatus;
     department: Department | null;
 }
 
