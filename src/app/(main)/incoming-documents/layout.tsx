@@ -64,7 +64,7 @@ export default function IncomingDocumentsLayout({
             {!isCollapsed && "Công văn nội bộ"}
           </a>
           <a
-            href="#"
+            href="/reports"
             className={`flex items-center gap-3 px-4 py-3 hover:bg-gray-100 ${
               isCollapsed ? "justify-center" : ""
             }`}

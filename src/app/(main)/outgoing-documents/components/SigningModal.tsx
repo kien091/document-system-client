@@ -4,7 +4,7 @@ import { useState } from "react";
 interface SigningModalProps {
   isOpen: boolean;
   onClose: () => void;
-  fileUrl: string;
+  fileUrl: string | undefined;
 }
 
 export default function SigningModal({
@@ -12,13 +12,12 @@ export default function SigningModal({
   onClose,
   fileUrl,
 }: SigningModalProps) {
-  const [selectedUser, setSelectedUser] = useState("");
   const [loading, setLoading] = useState(true);
 
   if (!isOpen) return null;
 
   // Xác định loại file từ đuôi file
-  const fileType = fileUrl.split(".").pop()?.toLowerCase();
+  const fileType = fileUrl?.split(".").pop()?.toLowerCase();
 
   const renderPreview = () => {
     switch (fileType) {
@@ -33,14 +32,14 @@ export default function SigningModal({
       case "doc":
       case "docx":
         // Đảm bảo URL là URL đầy đủ
-        const fullUrl = fileUrl.startsWith("http")
+        const fullUrl = fileUrl?.startsWith("http")
           ? fileUrl
           : `${window.location.origin}${fileUrl}`;
 
         return (
           <iframe
             src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(
-              fullUrl
+              fullUrl || ""
             )}`}
             className="w-full h-full rounded-lg"
             onLoad={() => setLoading(false)}
@@ -88,22 +87,6 @@ export default function SigningModal({
           {/* Signing Options */}
           <div className="w-80 p-4 flex flex-col">
             <div className="space-y-4">
-              {/* User Selection */}
-              <div>
-                <label className="block text-xs mb-1">
-                  Chọn người ký cần thiết lập
-                </label>
-                <select
-                  className="w-full border rounded-lg py-2 px-3 text-sm"
-                  value={selectedUser}
-                  onChange={(e) => setSelectedUser(e.target.value)}
-                >
-                  <option value="">Chọn người ký</option>
-                  <option value="user1">Nguyễn Văn A - Giám đốc</option>
-                  <option value="user2">Trần Thị B - Phó giám đốc</option>
-                </select>
-              </div>
-
               {/* Signing Tools */}
               <div className="grid grid-cols-2 gap-4">
                 <button className="flex flex-col items-center gap-2 p-3 border rounded-lg hover:bg-gray-50">
@@ -138,7 +121,7 @@ export default function SigningModal({
                 Hủy
               </button>
               <button className="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-xs">
-                Gửi duyệt
+                Hoàn tất
               </button>
             </div>
           </div>

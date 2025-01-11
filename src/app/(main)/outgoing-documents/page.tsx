@@ -907,7 +907,7 @@ export default function IncomingDocumentsPage() {
       <SigningModal
         isOpen={isSigningModalOpen}
         onClose={() => setIsSigningModalOpen(false)}
-        fileUrl="https://bucket-document-system.s3.ap-southeast-1.amazonaws.com/documents/word/446303a6-0e44-4832-b86e-b5034a09e587_161.2020.TDT-TB.docx"
+        fileUrl={documentById?.attachment}
       />
       </div>
     </>
