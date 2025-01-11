@@ -7,47 +7,68 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { useUser } from "@/contexts/user.context";
+import { UserProfile } from "@/types/user";
+import { useState } from "react";
 
 interface EditInfoModalProps {
   isOpen: boolean;
   onClose: () => void;
   title: string;
-  fields: {
-    label: string;
-    value: string;
-    id: string;
-  }[];
+  profile: UserProfile | null;
 }
 
 export function EditInfoModal({
   isOpen,
   onClose,
   title,
-  fields,
+  profile,
 }: EditInfoModalProps) {
-  const handleSubmit = (e: React.FormEvent) => {
+  const { updateProfile } = useUser();
+  const [email, setEmail] = useState(profile?.email || "");
+  const [phone, setPhone] = useState(profile?.phone || "");
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle save logic here
-    onClose();
+
+    if (!profile) return;
+    try {
+      const formData = new FormData();
+      formData.append("email", email);
+      formData.append("phone", phone);
+      profile.email = email;
+      profile.phone = phone;
+      await updateProfile(profile?.userId, formData);
+      onClose();
+    } catch (error) {
+      console.error("Error submitting form:", error);
+    }
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md" aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
-          {fields.map((field) => (
-            <div key={field.id} className="space-y-2">
-              <Label htmlFor={field.id}>{field.label}</Label>
-              <Input
-                id={field.id}
-                defaultValue={field.value}
-                placeholder={`Enter ${field.label.toLowerCase()}`}
-              />
-            </div>
-          ))}
+          <div key={profile?.email} className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              value={email ?? ""}
+              placeholder="Email"
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </div>
+          <div key={profile?.phone} className="space-y-2">
+            <Label htmlFor="phone">Phone</Label>
+            <Input
+              id="phone"
+              value={phone ?? ""}
+              placeholder="Phone"
+              onChange={(e) => setPhone(e.target.value)}
+            />
+          </div>
           <div className="flex justify-end gap-3">
             <Button variant="outline" type="button" onClick={onClose}>
               Hủy

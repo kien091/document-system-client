@@ -1,16 +1,22 @@
 export interface Department {
     id: string;
     name: string;
+    hotline: string;
+    description: string;
     location: string;
 }
 
 export interface Creator {
     userId: string;
+    avatar: string;
+    background: string;
     username: string;
     fullName: string;
     email: string;
+    phone: string;
     position: string;
-    avatar: string;
+    role: string;
+    status: string;
     department: Department;
 }
 
@@ -20,8 +26,9 @@ export interface Document {
     title: string;
     content: string;
     type: `INCOMING` | `OUTGOING` | `INTERNAL` | `UNKNOWN`;
-    status: `DRAFT` | `PENDING` | `PROCESSING` | `COMPLETED`;
+    status: `PENDING` | `PROCESSING` | `COMPLETED` | `REJECTED`;
     urgencyLevel: `IMPORTANT` | `NORMAL`;
+    agencyUnit: string;
     attachment: string;
     keywords: string;
     logNote: string;
@@ -63,6 +70,13 @@ export interface Sort {
     unsorted: boolean;
 }
 
+export interface statusCounts {
+    PENDING: number;
+    PROCESSING: number;
+    COMPLETED: number;
+    REJECTED: number;
+}
+
 export interface PaginationResponse {
     content: Document[];
     pageable: Pageable;
@@ -75,10 +89,16 @@ export interface PaginationResponse {
     numberOfElements: number;
     first: boolean;
     empty: boolean;
+    statusCounts: statusCounts;
 }
 
 export interface ApiResponse {
     message: string;
     data: PaginationResponse;
+}
+
+export interface DocumentByIdResponse {
+    message: string;
+    data: Document;
 }
 

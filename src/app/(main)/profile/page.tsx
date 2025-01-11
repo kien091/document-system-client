@@ -20,7 +20,6 @@ export default function ProfilePage() {
   const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
   const [isCoverModalOpen, setIsCoverModalOpen] = useState(false);
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
-  const [isDepartmentModalOpen, setIsDepartmentModalOpen] = useState(false);
   const [isNameModalOpen, setIsNameModalOpen] = useState(false);
   const [recentDocuments, setRecentDocuments] = useState<Document[]>([]);
 
@@ -36,24 +35,6 @@ export default function ProfilePage() {
 
     fetchRecentDocuments();
   }, []);
-
-  const contactFields = [
-    { label: "Email", value: profile?.email ?? "", id: "email" },
-    {
-      label: "Phone Number",
-      value: profile?.phone ?? "",
-      id: "phone",
-    },
-  ];
-
-  const departmentFields = [
-    { label: "Phone", value: "(028) 37755046", id: "deptPhone" },
-    {
-      label: "Address",
-      value: profile?.department?.location ?? "",
-      id: "address",
-    },
-  ];
 
   return (
     <>
@@ -90,6 +71,7 @@ export default function ProfilePage() {
                   alt="Profile"
                   fill
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  priority
                   className="object-cover"
                 />
                 <button
@@ -148,9 +130,6 @@ export default function ProfilePage() {
               <div className="bg-white p-6 rounded-lg shadow-[4px_4px_10px_rgba(0,0,0,0.2)]">
                 <div className="flex items-center justify-between mb-4 pb-2.5 border-b border-gray-300">
                   <h2 className="text-lg font-semibold">Phòng ban</h2>
-                  <button onClick={() => setIsDepartmentModalOpen(true)}>
-                    <PencilIcon className="w-6.5 h-6.5 text-gray-400 hover:text-gray-600 hover:bg-gray-200 rounded-md p-1" />
-                  </button>
                 </div>
                 <div className="space-y-4">
                   <div>
@@ -183,7 +162,6 @@ export default function ProfilePage() {
                               alt="Document"
                               width={400}
                               height={250}
-                              priority
                               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                               className="w-full rounded-md mb-3"
                             />
@@ -206,13 +184,7 @@ export default function ProfilePage() {
           isOpen={isContactModalOpen}
           onClose={() => setIsContactModalOpen(false)}
           title="Thông tin liên lạc"
-          fields={contactFields}
-        />
-        <EditInfoModal
-          isOpen={isDepartmentModalOpen}
-          onClose={() => setIsDepartmentModalOpen(false)}
-          title="Thông tin phòng ban"
-          fields={departmentFields}
+          profile={profile}
         />
         <UploadImageModal
           isOpen={isAvatarModalOpen}
@@ -233,7 +205,7 @@ export default function ProfilePage() {
         <EditNameModal
           isOpen={isNameModalOpen}
           onClose={() => setIsNameModalOpen(false)}
-          profile={profile ?? null}
+          profile={profile}
         />
       </div>
     </>

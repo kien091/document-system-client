@@ -14,6 +14,7 @@ export default function RegisterPage() {
             alt="TDT Logo"
             width={100}
             height={100}
+            priority
             className="object-contain"
           />
         </div>

@@ -17,12 +17,14 @@ interface DocumentContextType {
   error: string | null;
   fetchRecentDocuments: () => Promise<void>;
   documents: Document[];
+  documentById: Document | null;
   pagination: PaginationResponse | null;
   fetchDocuments: (
     page?: number,
     size?: number,
     type?: string
   ) => Promise<void>;
+  fetchDocumentById: (id: string) => Promise<void>;
 }
 
 const DocumentContext = createContext<DocumentContextType | undefined>(
@@ -33,8 +35,8 @@ export function DocumentProvider({ children }: { children: React.ReactNode }) {
   const [recentIncoming, setRecentIncoming] = useState<Document[]>([]);
   const [recentOutgoing, setRecentOutgoing] = useState<Document[]>([]);
   const [documents, setDocuments] = useState<Document[]>([]);
-  const [pagination, setPagination] =
-    useState<PaginationResponse | null>(null);
+  const [documentById, setDocumentById] = useState<Document | null>(null);
+  const [pagination, setPagination] = useState<PaginationResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -69,18 +71,14 @@ export function DocumentProvider({ children }: { children: React.ReactNode }) {
             size
           );
           setDocuments(response.data.content);
-          console.log("Content:", response.data.content);
           setPagination(response.data);
-          console.log("Pagination:", response.data);
         } else if (type === "OUTGOING") {
           const response = await documentService.getOutgoingDocuments(
             page,
             size
           );
           setDocuments(response.data.content);
-          console.log("Content:", response.data.content);
           setPagination(response.data);
-          console.log("Pagination:", response.data);
         }
         setError(null);
       } catch (err) {
@@ -102,6 +100,11 @@ export function DocumentProvider({ children }: { children: React.ReactNode }) {
     }
   }, [fetchRecentDocuments]);
 
+  const fetchDocumentById = useCallback(async (id: string) => {
+    const response = await documentService.getDocumentById(id);
+    setDocumentById(response.data);
+  }, []);
+
   return (
     <DocumentContext.Provider
       value={{
@@ -111,8 +114,10 @@ export function DocumentProvider({ children }: { children: React.ReactNode }) {
         error,
         fetchRecentDocuments,
         documents,
+        documentById,
         pagination,
         fetchDocuments,
+        fetchDocumentById,
       }}
     >
       {children}

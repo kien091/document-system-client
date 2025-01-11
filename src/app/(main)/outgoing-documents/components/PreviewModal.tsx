@@ -4,8 +4,8 @@ import { useState } from "react";
 interface PreviewModalProps {
   isOpen: boolean;
   onClose: () => void;
-  fileUrl: string;
-  fileType: "pdf" | "doc" | "xlsx";
+  fileUrl: string | undefined;
+  fileType: "pdf" | "doc" | "docx";
 }
 
 export default function PreviewModal({
@@ -19,6 +19,7 @@ export default function PreviewModal({
   if (!isOpen) return null;
 
   const renderPreview = () => {
+    console.log(fileUrl);
     switch (fileType) {
       case "pdf":
         return (
@@ -29,20 +30,11 @@ export default function PreviewModal({
           />
         );
       case "doc":
+      case "docx":
         return (
           <iframe
             src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(
-              fileUrl
-            )}`}
-            className="w-full h-full"
-            onLoad={() => setLoading(false)}
-          />
-        );
-      case "xlsx":
-        return (
-          <iframe
-            src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(
-              fileUrl
+              fileUrl || ""
             )}`}
             className="w-full h-full"
             onLoad={() => setLoading(false)}

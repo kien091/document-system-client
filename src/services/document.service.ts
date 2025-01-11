@@ -1,5 +1,5 @@
 import { axiosInstance } from '@/lib/axios';
-import { Document } from '@/types/document';
+import { Document, DocumentByIdResponse } from '@/types/document';
 import { ApiResponse } from '@/types/document';
 
 export const documentService = {
@@ -18,7 +18,6 @@ export const documentService = {
     getIncomingDocuments: async (page: number, size: number = 7): Promise<ApiResponse> => {
         try {
             const response = await axiosInstance.get<ApiResponse>(`/documents/all?page=${page}&size=${size}&type=INCOMING`);
-            console.log(response.data);
             return response.data;
         } catch (error) {
             console.error('Error fetching documents:', error);
@@ -29,7 +28,6 @@ export const documentService = {
     getOutgoingDocuments: async (page: number, size: number = 7): Promise<ApiResponse> => {
         try {
             const response = await axiosInstance.get<ApiResponse>(`/documents/all?page=${page}&size=${size}&type=OUTGOING`);
-            console.log(response.data);
             return response.data;
         } catch (error) {
             console.error('Error fetching documents:', error);
@@ -37,9 +35,9 @@ export const documentService = {
         }
     },
 
-    getDocumentById: async (id: string): Promise<Document> => {
+    getDocumentById: async (id: string): Promise<DocumentByIdResponse> => {
         try {
-            const response = await axiosInstance.get<Document>(`/documents/${id}`);
+            const response = await axiosInstance.get<DocumentByIdResponse>(`/documents/${id}`);
             return response.data;
         } catch (error) {
             console.error('Error fetching document:', error);

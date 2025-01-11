@@ -24,54 +24,16 @@ import FilterDocumentModal from "./components/FilterDocumentModal";
 import PreviewModal from "./components/PreviewModal";
 import AddTaskModal from "./components/AddTaskModal";
 import SigningModal from "./components/SigningModal";
-
-interface DocumentType {
-  id: number;
-  title: string;
-  department: string;
-  status: string;
-  date: string;
-}
-
-const getPageNumbers = (currentPage: number, totalPages: number) => {
-  const delta = 2;
-  const range = [];
-  const rangeWithDots = [];
-  let l;
-
-  range.push(1);
-  if (totalPages <= 1) return range;
-
-  for (let i = currentPage - delta; i <= currentPage + delta; i++) {
-    if (i > 1 && i < totalPages) {
-      range.push(i);
-    }
-  }
-
-  range.push(totalPages);
-
-  for (const i of range) {
-    if (l) {
-      if (i - l === 2) {
-        rangeWithDots.push(l + 1);
-      } else if (i - l !== 1) {
-        rangeWithDots.push("...");
-      }
-    }
-    rangeWithDots.push(i);
-    l = i;
-  }
-
-  return rangeWithDots;
-};
+import { useDocuments } from "@/contexts/document.context";
+import { Document } from "@/types/document";
+import { Loading } from "@/components/ui/loading";
 
 export default function IncomingDocumentsPage() {
+  const { documents, documentById, pagination, loading, fetchDocuments, fetchDocumentById } = useDocuments();
   const [activeFilter, setActiveFilter] = useState("all");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [selectedDoc, setSelectedDoc] = useState<number | null>(null);
+  const [selectedDoc, setSelectedDoc] = useState<string | null>(null);
   const [isClosing, setIsClosing] = useState(false);
   const [activeAction, setActiveAction] = useState("history");
-  const itemsPerPage = 7;
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -114,224 +76,16 @@ export default function IncomingDocumentsPage() {
   const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
   const [isSigningModalOpen, setIsSigningModalOpen] = useState(false);
 
-  const documents = [
-    {
-      id: 1,
-      title:
-        "V/v Thông báo lịch nghỉ Tết Dương lịch và Tết Nguyên đán Giáp Thìn 2024",
-      department: "Phòng Đại học",
-      status: "new",
-      date: "11/11/2024",
-      documentNumber: "1234567890",
-    },
-    {
-      id: 2,
-      title: "V/v Thông báo kế hoạch tổ chức Lễ tốt nghiệp đợt 3 năm 2024",
-      department: "Phòng Đào tạo",
-      status: "processing",
-      date: "10/11/2024",
-      documentNumber: "1234567890",
-    },
-    {
-      id: 3,
-      title:
-        "V/v Thông báo lịch nghỉ Tết Dương lịch và Tết Nguyên đán Giáp Thìn 2024",
-      department: "Phòng Đại học",
-      status: "new",
-      date: "11/11/2024",
-      documentNumber: "1234567890",
-    },
-    {
-      id: 4,
-      title:
-        "V/v Thông báo lịch nghỉ Tết Dương lịch và Tết Nguyên đán Giáp Thìn 2024",
-      department: "Phòng Đại học",
-      status: "new",
-      date: "11/11/2024",
-      documentNumber: "1234567890",
-    },
-    {
-      id: 5,
-      title:
-        "V/v Thông báo lịch nghỉ Tết Dương lịch và Tết Nguyên đán Giáp Thìn 2024",
-      department: "Phòng Đại học",
-      status: "new",
-      date: "11/11/2024",
-      documentNumber: "1234567890",
-    },
-    {
-      id: 6,
-      title:
-        "V/v Thông báo về việc đăng ký học phần học kỳ 2 năm học 2024-2025",
-      department: "Phòng Đào tạo",
-      status: "completed",
-      date: "01/11/2024",
-      documentNumber: "1234567890",
-    },
-    {
-      id: 7,
-      title:
-        "V/v Thông báo về việc đăng ký học phần học kỳ 2 năm học 2024-2025",
-      department: "Phòng Đào tạo",
-      status: "completed",
-      date: "01/11/2024",
-      documentNumber: "1234567890",
-    },
-    {
-      id: 8,
-      title:
-        "V/v Thông báo về việc đăng ký học phần học kỳ 2 năm học 2024-2025",
-      department: "Phòng Đào tạo",
-      status: "completed",
-      date: "01/11/2024",
-      documentNumber: "1234567890",
-    },
-    {
-      id: 9,
-      title:
-        "V/v Thông báo về việc đăng ký học phần học kỳ 2 năm học 2024-2025",
-      department: "Phòng Đào tạo",
-      status: "completed",
-      date: "01/11/2024",
-      documentNumber: "1234567890",
-    },
-    {
-      id: 10,
-      title:
-        "V/v Thông báo về việc đăng ký học phần học kỳ 2 năm học 2024-2025",
-      department: "Phòng Đào tạo",
-      status: "completed",
-      date: "01/11/2024",
-      documentNumber: "1234567890",
-    },
-    {
-      id: 11,
-      title:
-        "V/v Thông báo về việc đăng ký học phần học kỳ 2 năm học 2024-2025",
-      department: "Phòng Đào tạo",
-      status: "completed",
-      date: "01/11/2024",
-      documentNumber: "1234567890",
-    },
-    {
-      id: 12,
-      title:
-        "V/v Thông báo về việc đăng ký học phần học kỳ 2 năm học 2024-2025",
-      department: "Phòng Đào tạo",
-      status: "completed",
-      date: "01/11/2024",
-      documentNumber: "1234567890",
-    },
-    {
-      id: 13,
-      title:
-        "V/v Thông báo lịch nghỉ Tết Dương lịch và Tết Nguyên đán Giáp Thìn 2024",
-      department: "Phòng Đại học",
-      status: "new",
-      date: "11/11/2024",
-      documentNumber: "1234567890",
-    },
-    {
-      id: 14,
-      title: "V/v Thông báo kế hoạch tổ chức Lễ tốt nghiệp đợt 3 năm 2024",
-      department: "Phòng Đào tạo",
-      status: "processing",
-      date: "10/11/2024",
-      documentNumber: "1234567890",
-    },
-    {
-      id: 15,
-      title:
-        "V/v Thông báo lịch nghỉ Tết Dương lịch và Tết Nguyên đán Giáp Thìn 2024",
-      department: "Phòng Đại học",
-      status: "new",
-      date: "11/11/2024",
-      documentNumber: "1234567890",
-    },
-    {
-      id: 16,
-      title:
-        "V/v Thông báo lịch nghỉ Tết Dương lịch và Tết Nguyên đán Giáp Thìn 2024",
-      department: "Phòng Đại học",
-      status: "new",
-      date: "11/11/2024",
-      documentNumber: "1234567890",
-    },
-    {
-      id: 17,
-      title:
-        "V/v Thông báo lịch nghỉ Tết Dương lịch và Tết Nguyên đán Giáp Thìn 2024",
-      department: "Phòng Đại học",
-      status: "new",
-      date: "11/11/2024",
-      documentNumber: "1234567890",
-    },
-    {
-      id: 18,
-      title:
-        "V/v Thông báo về việc đăng ký học phần học kỳ 2 năm học 2024-2025",
-      department: "Phòng Đào tạo",
-      status: "completed",
-      date: "01/11/2024",
-      documentNumber: "1234567890",
-    },
-    {
-      id: 19,
-      title:
-        "V/v Thông báo về việc đăng ký học phần học kỳ 2 năm học 2024-2025",
-      department: "Phòng Đào tạo",
-      status: "completed",
-      date: "01/11/2024",
-      documentNumber: "1234567890",
-    },
-    {
-      id: 20,
-      title:
-        "V/v Thông báo về việc đăng ký học phần học kỳ 2 năm học 2024-2025",
-      department: "Phòng Đào tạo",
-      status: "completed",
-      date: "01/11/2024",
-      documentNumber: "1234567890",
-    },
-    {
-      id: 21,
-      title:
-        "V/v Thông báo về việc đăng ký học phần học kỳ 2 năm học 2024-2025",
-      department: "Phòng Đào tạo",
-      status: "completed",
-      date: "01/11/2024",
-      documentNumber: "1234567890",
-    },
-    {
-      id: 22,
-      title:
-        "V/v Thông báo về việc đăng ký học phần học kỳ 2 năm học 2024-2025",
-      department: "Phòng Đào tạo",
-      status: "completed",
-      date: "01/11/2024",
-      documentNumber: "1234567890",
-    },
-    {
-      id: 23,
-      title:
-        "V/v Thông báo về việc đăng ký học phần học kỳ 2 năm học 2024-2025",
-      department: "Phòng Đào tạo",
-      status: "completed",
-      date: "01/11/2024",
-      documentNumber: "1234567890",
-    },
-  ];
-
   const filteredDocuments = documents.filter(
     (doc) =>
       doc.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      doc.department.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      doc.documentNumber.toLowerCase().includes(searchTerm.toLowerCase())
+      doc.agencyUnit?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      doc.number?.toLowerCase().includes(searchTerm.toLowerCase())
   );
-  const totalPages = Math.ceil(filteredDocuments.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentDocuments = filteredDocuments.slice(startIndex, endIndex);
+
+  useEffect(() => {
+    fetchDocuments(0, 7, "OUTGOING");
+  }, [searchTerm, fetchDocuments]);
 
   const handleClose = () => {
     setIsClosing(true);
@@ -397,21 +151,20 @@ export default function IncomingDocumentsPage() {
     }
   }, [selectedDoc, activeAction]);
 
-  const handleDocumentClick = (doc: DocumentType) => {
-    if (selectedDoc === doc.id) {
+  const handleDocumentClick = async (doc: Document) => {
+    if (selectedDoc === doc.documentId) {
       handleClose();
-    } else if (!selectedDoc) {
-      setSelectedDoc(doc.id);
-      setActiveAction("history");
     } else {
-      setSelectedDoc(doc.id);
-      setActiveAction("history");
+      try {
+        setSelectedDoc(doc.documentId);
+        setActiveAction("history");
+        await fetchDocumentById(doc.documentId);
+      } catch (error) {
+        console.error("Error fetching document:", error);
+      }
     }
   };
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm]);
 
   const handlePrint = () => {
     const fileUrl = "/files/601.BTTTT-CNTT.pdf"; // path to your file
@@ -499,12 +252,16 @@ export default function IncomingDocumentsPage() {
   };
 
   return (
-    <div className="p-4 overflow-x-hidden">
+    <>
+      {loading && <Loading />}
+      <div className="p-4 overflow-x-hidden">
       {/* Page title */}
       <div className="flex items-center gap-2 mb-6">
         <h1 className="text-xl font-semibold">Công văn đi</h1>
         <span className="text-gray-500">|</span>
-        <span className="text-gray-500">Tất cả (57)</span>
+        <span className="text-gray-500">
+          Tất cả ({pagination?.totalElements})
+        </span>
       </div>
 
       {/* Header group with background */}
@@ -554,7 +311,7 @@ export default function IncomingDocumentsPage() {
                 activeFilter === "all" ? "text-blue-100" : "text-gray-500"
               }
             >
-              57
+              {pagination?.totalElements}
             </span>
           </button>
           <button
@@ -571,7 +328,7 @@ export default function IncomingDocumentsPage() {
                 activeFilter === "pending" ? "text-blue-100" : "text-gray-500"
               }
             >
-              35
+              {pagination?.statusCounts.PENDING}
             </span>
           </button>
           <button
@@ -590,7 +347,7 @@ export default function IncomingDocumentsPage() {
                   : "text-gray-500"
               }
             >
-              17
+              {pagination?.statusCounts.PROCESSING}
             </span>
           </button>
           <button
@@ -607,7 +364,7 @@ export default function IncomingDocumentsPage() {
                 activeFilter === "completed" ? "text-blue-100" : "text-gray-500"
               }
             >
-              5
+              {pagination?.statusCounts.COMPLETED}
             </span>
           </button>
           <button
@@ -639,13 +396,13 @@ export default function IncomingDocumentsPage() {
         >
           {/* Documents list */}
           <div className="flex-1 bg-white rounded-lg shadow divide-y mb-4 overflow-y-auto">
-            {currentDocuments.map((doc, index) => (
+            {documents.map((doc, index) => (
               <div
-                key={doc.id}
+                key={doc.documentId}
                 className={`p-4 hover:bg-gray-50 cursor-pointer ${
                   index === 0 ? "rounded-t-lg" : ""
                 } ${
-                  index === currentDocuments.length - 1 ? "rounded-b-lg" : ""
+                  index === filteredDocuments.length - 1 ? "rounded-b-lg" : ""
                 }`}
                 onClick={() => handleDocumentClick(doc)}
               >
@@ -654,7 +411,7 @@ export default function IncomingDocumentsPage() {
                     {doc.title}
                   </h3>
                   <div className="flex justify-between items-center">
-                    <div className="text-sm text-gray-500">{doc.date}</div>
+                    <div className="text-sm text-gray-500">{doc.issueDate}</div>
                     <span className="px-3 py-1 bg-blue-50 text-blue-500 rounded-full text-xs">
                       Mới tạo
                     </span>
@@ -662,7 +419,7 @@ export default function IncomingDocumentsPage() {
                   <div className="flex items-center gap-2">
                     <Building className="w-4 h-4 text-gray-500" />
                     <span className="text-sm text-gray-500">
-                      {doc.department}
+                      {doc.agencyUnit}
                     </span>
                   </div>
                 </div>
@@ -671,27 +428,23 @@ export default function IncomingDocumentsPage() {
           </div>
 
           {/* Pagination */}
-          <div className="mt-auto flex justify-center items-center gap-2">
-            {getPageNumbers(currentPage, totalPages).map((pageNumber, index) =>
-              pageNumber === "..." ? (
-                <span key={`dots-${index}`} className="px-3 py-2 text-gray-500">
-                  {pageNumber}
-                </span>
-              ) : (
-                <button
-                  key={pageNumber}
-                  className={`px-2 py-2 border rounded-md min-w-[40px] ${
-                    currentPage === pageNumber
-                      ? "bg-blue-500 text-white"
-                      : "hover:bg-gray-50"
-                  }`}
-                  onClick={() => setCurrentPage(Number(pageNumber))}
-                >
-                  {pageNumber}
-                </button>
-              )
+          {pagination && (
+              <div className="flex justify-center gap-2">
+                {Array.from({ length: pagination.totalPages }, (_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => fetchDocuments(i, 7, "OUTGOING")}
+                    className={`px-3 py-1 rounded ${
+                      pagination.number === i
+                        ? "bg-blue-500 text-white"
+                        : "bg-gray-100"
+                    }`}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+              </div>
             )}
-          </div>
         </div>
 
         {/* Selected Document Card */}
@@ -710,13 +463,12 @@ export default function IncomingDocumentsPage() {
                 <div className="flex justify-between items-start p-4">
                   <div className="flex-1">
                     <h3 className="font-medium mb-1">
-                      V/v Thông báo lịch nghỉ Tết Dương lịch và Tết Nguyên đán
-                      Giáp Thìn 2024
+                      {documentById?.title}
                     </h3>
                     <div className="flex items-center gap-2">
                       <Building className="w-4 h-4 text-gray-500" />
                       <span className="text-sm text-gray-500">
-                        Phòng Đại học
+                        {documentById?.agencyUnit}
                       </span>
                     </div>
                   </div>
@@ -741,19 +493,19 @@ export default function IncomingDocumentsPage() {
                     <div className="grid grid-cols-2 gap-6">
                       <div>
                         <p className="text-gray-500 mb-1">Số văn bản</p>
-                        <p className="font-medium">601/BTTTT-CNTT</p>
+                        <p className="font-medium">{documentById?.number}</p>
                       </div>
                       <div>
                         <p className="text-gray-500 mb-1">Ngày tạo</p>
-                        <p className="font-medium">11/11/2024</p>
+                        <p className="font-medium">{documentById?.issueDate}</p>
                       </div>
                       <div>
                         <p className="text-gray-500 mb-1">Ngày gửi/nhận</p>
-                        <p className="font-medium">10/11/2024</p>
+                        <p className="font-medium">{documentById?.sendDate}</p>
                       </div>
                       <div>
                         <p className="text-gray-500 mb-1">Hạn phản hồi</p>
-                        <p className="font-medium">20/11/2024</p>
+                        <p className="font-medium">{documentById?.expirationDate}</p>
                       </div>
                       <div>
                         <p className="text-gray-500 mb-1">Phân loại</p>
@@ -761,16 +513,28 @@ export default function IncomingDocumentsPage() {
                       </div>
                       <div>
                         <p className="text-gray-500 mb-1">Mức độ bảo mật</p>
-                        <p className="font-medium">Cao</p>
+                        <p className="font-medium">Thường</p>
                       </div>
                     </div>
                   </div>
                   <div>
                     <p className="text-gray-500 mb-1">Mức độ khẩn cấp</p>
-                    <div className="flex items-center gap-2">
-                      <span className="w-2 h-2 bg-red-500 rounded-full"></span>
-                      <p className="font-medium text-red-500">Hỏa tốc</p>
-                    </div>
+                    {
+                      documentById?.urgencyLevel === "IMPORTANT" && (
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 bg-red-500 rounded-full"></span>
+                          <p className="font-medium text-red-500">Hỏa tốc</p>
+                        </div>
+                      )
+                    }
+                    {
+                      documentById?.urgencyLevel === "NORMAL" && (
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 bg-yellow-500 rounded-full"></span>
+                          <p className="font-medium text-yellow-500">Bình thường</p>
+                        </div>
+                      )
+                    }
                   </div>
                 </div>
 
@@ -783,7 +547,7 @@ export default function IncomingDocumentsPage() {
                       height={24}
                     />
                     <span className="text-sm text-gray-600">
-                      601.BTTTT-CNTT.pdf (2.35MB)
+                      {documentById?.number}.pdf
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
@@ -1131,8 +895,8 @@ export default function IncomingDocumentsPage() {
       <PreviewModal
         isOpen={isPreviewOpen}
         onClose={() => setIsPreviewOpen(false)}
-        fileUrl="/files/601.BTTTT-CNTT.pdf" // path to file
-        fileType="pdf" // type of file
+        fileUrl={documentById?.attachment} // path to file
+        fileType={documentById?.attachment?.split('.').pop() as 'pdf' | 'doc' | 'docx'} // type of file
       />
 
       <AddTaskModal
@@ -1145,6 +909,7 @@ export default function IncomingDocumentsPage() {
         onClose={() => setIsSigningModalOpen(false)}
         fileUrl="https://bucket-document-system.s3.ap-southeast-1.amazonaws.com/documents/word/446303a6-0e44-4832-b86e-b5034a09e587_161.2020.TDT-TB.docx"
       />
-    </div>
+      </div>
+    </>
   );
 }

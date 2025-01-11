@@ -3,7 +3,6 @@
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -20,23 +19,30 @@ interface EditNameModalProps {
   profile: UserProfile | null;
 }
 
-export function EditNameModal({ isOpen, onClose, profile }: EditNameModalProps) {
-  const [username, setUsername] = useState(profile?.username);
-  const [fullName, setFullName] = useState(profile?.fullName);
+export function EditNameModal({
+  isOpen,
+  onClose,
+  profile,
+}: EditNameModalProps) {
+  const [username, setUsername] = useState(profile?.username || "");
+  const [fullName, setFullName] = useState(profile?.fullName || "");
   const { updateProfile } = useUser();
 
   useEffect(() => {
-    setUsername(profile?.username);
-    setFullName(profile?.fullName);
+    setUsername(profile?.username || "");
+    setFullName(profile?.fullName || "");
   }, [profile]);
 
-  const handleUpdateProfile = async () => {
-    console.log("Kien", username, fullName);
+  const handleUpdateProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (!profile || !username || !fullName) return;
+
     try {
       const formData = new FormData();
-      formData.append("username", username);
+      formData.append("userName", username);
       formData.append("fullName", fullName);
+      profile.username = username;
+      profile.fullName = fullName;
       await updateProfile(profile.userId, formData);
       onClose();
     } catch (error: unknown) {
@@ -47,29 +53,31 @@ export function EditNameModal({ isOpen, onClose, profile }: EditNameModalProps) 
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent
+        className="sm:max-w-md"
+        aria-describedby={undefined}
+        autoFocus
+      >
         <DialogHeader>
           <DialogTitle>Chỉnh sửa thông tin cá nhân</DialogTitle>
-          <DialogDescription>
-            Chỉnh sửa thông tin cá nhân của bạn
-          </DialogDescription>
         </DialogHeader>
-        <form className="space-y-4">
+        <form onSubmit={handleUpdateProfile} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="username">Tên đăng nhập</Label>
               <Input
                 id="username"
-                defaultValue={username}
+                value={username}
                 placeholder="Nhập tên đăng nhập"
-                onChange={(e) => setUsername(e.target.value)}
+                readOnly
+                className="bg-gray-100"
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="fullName">Họ và tên</Label>
               <Input
                 id="fullName"
-                defaultValue={fullName}
+                value={fullName}
                 placeholder="Nhập họ và tên"
                 onChange={(e) => setFullName(e.target.value)}
               />
@@ -80,7 +88,12 @@ export function EditNameModal({ isOpen, onClose, profile }: EditNameModalProps) 
             <Button variant="outline" type="button" onClick={onClose}>
               Hủy
             </Button>
-            <Button type="submit" className="bg-[#dc2626] hover:bg-[#dc2626]/80" onClick={handleUpdateProfile}>Lưu thay đổi</Button>
+            <Button
+              type="submit"
+              className="bg-[#dc2626] hover:bg-[#dc2626]/80"
+            >
+              Lưu thay đổi
+            </Button>
           </div>
         </form>
       </DialogContent>
