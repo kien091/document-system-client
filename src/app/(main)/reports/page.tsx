@@ -8,6 +8,8 @@ import {
   ArrowDownRight,
   Download,
   Filter,
+  RotateCcw,
+  Check,
 } from "lucide-react";
 import {
   BarChart,
@@ -25,8 +27,23 @@ import {
   Cell,
 } from "recharts";
 import * as XLSX from "xlsx";
+import { useState } from "react";
+
+// Thêm state và interface
+interface ReportFilters {
+  dateRange: string;
+  documentType: string;
+  status: string;
+}
 
 export default function ReportsPage() {
+  const [showFilter, setShowFilter] = useState(false);
+  const [filters, setFilters] = useState<ReportFilters>({
+    dateRange: "all",
+    documentType: "all",
+    status: "all",
+  });
+
   // Mock data cho biểu đồ
   const monthlyData = [
     { name: "T1", "Công văn đến": 40, "Công văn đi": 24 },
@@ -142,13 +159,111 @@ export default function ReportsPage() {
     XLSX.writeFile(wb, fileName);
   };
 
+  // Filter section component
+  const FilterSection = () => {
+    return (
+      <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Thời gian */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Thời gian
+            </label>
+            <select
+              value={filters.dateRange}
+              onChange={(e) =>
+                setFilters((prev) => ({ ...prev, dateRange: e.target.value }))
+              }
+              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+            >
+              <option value="all">Tất cả thời gian</option>
+              <option value="today">Hôm nay</option>
+              <option value="week">7 ngày qua</option>
+              <option value="month">30 ngày qua</option>
+              <option value="quarter">3 tháng qua</option>
+              <option value="year">Năm nay</option>
+            </select>
+          </div>
+
+          {/* Loại công văn */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Loại công văn
+            </label>
+            <select
+              value={filters.documentType}
+              onChange={(e) =>
+                setFilters((prev) => ({
+                  ...prev,
+                  documentType: e.target.value,
+                }))
+              }
+              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+            >
+              <option value="all">Tất cả loại</option>
+              <option value="incoming">Công văn đến</option>
+              <option value="outgoing">Công văn đi</option>
+              <option value="internal">Công văn nội bộ</option>
+            </select>
+          </div>
+
+          {/* Trạng thái */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Trạng thái xử lý
+            </label>
+            <select
+              value={filters.status}
+              onChange={(e) =>
+                setFilters((prev) => ({ ...prev, status: e.target.value }))
+              }
+              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+            >
+              <option value="all">Tất cả trạng thái</option>
+              <option value="pending">Chưa xử lý</option>
+              <option value="processing">Đang xử lý</option>
+              <option value="completed">Đã hoàn thành</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Buttons */}
+        <div className="flex justify-end gap-2 mt-4">
+          <button
+            onClick={() =>
+              setFilters({
+                dateRange: "all",
+                documentType: "all",
+                status: "all",
+              })
+            }
+            className="px-4 py-2 text-gray-600 hover:text-gray-800 flex items-center gap-2"
+          >
+            <RotateCcw className="w-4 h-4" />
+            Đặt lại
+          </button>
+          <button
+            onClick={() => setShowFilter(false)}
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 flex items-center gap-2"
+          >
+            <Check className="w-4 h-4" />
+            Áp dụng
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="p-6">
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-semibold">Báo cáo & Thống kê</h1>
         <div className="flex gap-3">
-          <button className="flex items-center gap-2 px-4 py-2 border rounded-lg hover:bg-gray-50">
+          <button
+            onClick={() => setShowFilter(!showFilter)}
+            className="flex items-center gap-2 px-4 py-2 border rounded-lg hover:bg-gray-50"
+          >
             <Filter className="w-4 h-4" />
             Bộ lọc
           </button>
@@ -161,6 +276,9 @@ export default function ReportsPage() {
           </button>
         </div>
       </div>
+
+      {/* Show Filter Section */}
+      {showFilter && <FilterSection />}
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
