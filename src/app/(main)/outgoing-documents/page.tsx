@@ -16,20 +16,30 @@ import {
   MoreVertical,
   Edit2,
   Trash2,
+  FileX,
 } from "lucide-react";
 import Image from "next/image";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import AddDocumentModal from "./components/AddDocumentModal";
 import FilterDocumentModal from "./components/FilterDocumentModal";
 import PreviewModal from "./components/PreviewModal";
 import AddTaskModal from "./components/AddTaskModal";
 import SigningModal from "./components/SigningModal";
 import { useDocuments } from "@/contexts/document.context";
-import { Document } from "@/types/document";
+import { Document, SearchRequest } from "@/types/document";
 import { Loading } from "@/components/ui/loading";
+import { debounce } from "lodash";
 
 export default function IncomingDocumentsPage() {
-  const { documents, documentById, pagination, loading, fetchDocuments, fetchDocumentById } = useDocuments();
+  const { 
+    documents, 
+    documentById, 
+    pagination, 
+    loading, 
+    fetchDocuments, 
+    fetchDocumentById,
+    searchDocuments
+  } = useDocuments();
   const [activeFilter, setActiveFilter] = useState("all");
   const [selectedDoc, setSelectedDoc] = useState<string | null>(null);
   const [isClosing, setIsClosing] = useState(false);
@@ -76,16 +86,46 @@ export default function IncomingDocumentsPage() {
   const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
   const [isSigningModalOpen, setIsSigningModalOpen] = useState(false);
 
-  const filteredDocuments = documents.filter(
-    (doc) =>
-      doc.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      doc.agencyUnit?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      doc.number?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
   useEffect(() => {
     fetchDocuments(0, 7, "OUTGOING");
-  }, [searchTerm, fetchDocuments]);
+  }, [fetchDocuments]);
+
+  const debouncedSearch = useMemo(
+    () =>
+      debounce(async (term: string) => {
+        if (term.trim() === "") {
+          await fetchDocuments(0, 7, "OUTGOING");
+          return;
+        }
+
+        const request: SearchRequest = {
+          keyword: term,
+          startDate: null,
+          endDate: null,
+          page: 0,
+          size: 7,
+          sortBy: "createdAt",
+          sortDirection: "DESC",
+          type: "OUTGOING",
+        };
+        await searchDocuments(request);
+      }, 800),
+    [searchDocuments, fetchDocuments]
+  );
+
+  // Handle input change
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+    debouncedSearch(value);
+  };
+
+  // Cleanup debounce on unmount
+  useEffect(() => {
+    return () => {
+      debouncedSearch.cancel();
+    };
+  }, [debouncedSearch]);
 
   const handleClose = () => {
     setIsClosing(true);
@@ -168,14 +208,8 @@ export default function IncomingDocumentsPage() {
 
   const handlePrint = () => {
     const fileUrl = "/files/601.BTTTT-CNTT.pdf"; // path to your file
-    const fileType = fileUrl.split(".").pop()?.toLowerCase();
 
-    if (fileType === "xlsx" || fileType === "xls") {
-      // TODO: Implement Api to convert excel to pdf
-      alert("Chức năng đang phát triển với file excel");
-      return;
-    } else {
-      const printFrame = document.createElement("iframe");
+    const printFrame = document.createElement("iframe");
       printFrame.style.display = "none";
       printFrame.src = fileUrl;
 
@@ -184,9 +218,8 @@ export default function IncomingDocumentsPage() {
       printFrame.onload = () => {
         setTimeout(() => {
           printFrame.contentWindow?.print();
-        }, 1000);
+        }, 300);
       };
-    }
   };
 
   const handleDownload = (fileUrl: string) => {
@@ -269,13 +302,13 @@ export default function IncomingDocumentsPage() {
         {/* Search and actions */}
         <div className="flex items-center gap-4 mb-4">
           <div className="flex-1 relative">
-            <Search className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
             <input
               type="text"
-              placeholder="Tìm kiếm công văn..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-3 py-2 border rounded-lg text-sm focus:outline-none focus:border-blue-500"
+              onChange={handleSearchChange}
+              placeholder="Tìm kiếm công văn..."
+              className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
           <button
@@ -396,36 +429,43 @@ export default function IncomingDocumentsPage() {
         >
           {/* Documents list */}
           <div className="flex-1 bg-white rounded-lg shadow divide-y mb-4 overflow-y-auto">
-            {documents.map((doc, index) => (
-              <div
-                key={doc.documentId}
-                className={`p-4 hover:bg-gray-50 cursor-pointer ${
-                  index === 0 ? "rounded-t-lg" : ""
-                } ${
-                  index === filteredDocuments.length - 1 ? "rounded-b-lg" : ""
-                }`}
-                onClick={() => handleDocumentClick(doc)}
-              >
-                <div className="flex flex-col gap-2">
-                  <h3 className="font-medium line-clamp-2 text-sm">
-                    {doc.title}
-                  </h3>
-                  <div className="flex justify-between items-center">
-                    <div className="text-sm text-gray-500">{doc.issueDate}</div>
-                    <span className="px-3 py-1 bg-blue-50 text-blue-500 rounded-full text-xs">
-                      Mới tạo
-                    </span>
+              {documents.length > 0 ? (
+                documents.map((doc, index) => (
+                  <div
+                    key={doc.documentId}
+                    className={`p-4 hover:bg-gray-50 cursor-pointer ${
+                      index === 0 ? "rounded-t-lg" : ""
+                    } ${index === documents.length - 1 ? "rounded-b-lg" : ""}`}
+                    onClick={() => handleDocumentClick(doc)}
+                  >
+                    <div className="flex flex-col gap-2">
+                      <h3 className="font-medium line-clamp-2 text-sm">
+                        {doc.title}
+                      </h3>
+                      <div className="flex justify-between items-center">
+                        <div className="text-sm text-gray-500">
+                          {doc.issueDate}
+                        </div>
+                        <span className="px-3 py-1 bg-blue-50 text-blue-500 rounded-full text-xs">
+                          Mới tạo
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Building className="w-4 h-4 text-gray-500" />
+                        <span className="text-sm text-gray-500">
+                          {doc.agencyUnit}
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Building className="w-4 h-4 text-gray-500" />
-                    <span className="text-sm text-gray-500">
-                      {doc.agencyUnit}
-                    </span>
-                  </div>
+                ))
+              ) : (
+                <div className="flex flex-col items-center justify-center h-full py-12 text-gray-500">
+                  <FileX className="w-12 h-12 mb-4" />
+                  <p>Không có công văn phù hợp với yêu cầu</p>
                 </div>
-              </div>
-            ))}
-          </div>
+              )}
+            </div>
 
           {/* Pagination */}
           {pagination && (

@@ -49,7 +49,7 @@ export interface DocumentResponse {
         size: number;
         number: number;
     };
-} 
+}
 
 export interface Pageable {
     pageNumber: number;
@@ -92,13 +92,24 @@ export interface PaginationResponse {
     statusCounts: statusCounts;
 }
 
-export interface ApiResponse {
+export interface ApiResponse<T> {
     message: string;
-    data: PaginationResponse;
+    data: T;
 }
 
 export interface DocumentByIdResponse {
     message: string;
     data: Document;
+}
+
+export interface SearchRequest {
+    keyword: string;
+    startDate: string | null;
+    endDate: string | null;
+    page: number;
+    size: number;
+    sortBy: string;
+    sortDirection: 'ASC' | 'DESC';
+    type: 'INCOMING' | 'OUTGOING';
 }
 

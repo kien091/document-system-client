@@ -1,5 +1,4 @@
 import axios from 'axios';
-import router from 'next/router';
 
 const API_URL = 'http://localhost:8080/api';
 
@@ -12,15 +11,25 @@ export const axiosInstance = axios.create({
 
 axiosInstance.interceptors.request.use(
     (config) => {
-        const token = localStorage.getItem('token');
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
-        } else {
-            router.push('/login');
+        if (typeof window !== 'undefined') {
+            const token = localStorage.getItem('token');
+            if (token) {
+                config.headers.Authorization = `Bearer ${token}`;
+            }
         }
         return config;
     },
     (error) => {
         return Promise.reject(error);
     }
-); 
+);
+
+axiosInstance.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response?.status === 401 && typeof window !== 'undefined') {
+            window.location.href = '/login';
+        }
+        return Promise.reject(error);
+    }
+);

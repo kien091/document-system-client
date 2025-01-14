@@ -7,7 +7,7 @@ import {
   useCallback,
   useEffect,
 } from "react";
-import { Document, PaginationResponse } from "@/types/document";
+import { Document, PaginationResponse, SearchRequest } from "@/types/document";
 import { documentService } from "@/services/document.service";
 
 interface DocumentContextType {
@@ -25,6 +25,9 @@ interface DocumentContextType {
     type?: string
   ) => Promise<void>;
   fetchDocumentById: (id: string) => Promise<void>;
+  searchDocuments: (request: SearchRequest) => Promise<void>;
+  searchParams: SearchRequest;
+  setSearchParams: React.Dispatch<React.SetStateAction<SearchRequest>>;
 }
 
 const DocumentContext = createContext<DocumentContextType | undefined>(
@@ -39,6 +42,16 @@ export function DocumentProvider({ children }: { children: React.ReactNode }) {
   const [pagination, setPagination] = useState<PaginationResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchParams, setSearchParams] = useState<SearchRequest>({
+    keyword: "",
+    startDate: null,
+    endDate: null,
+    page: 0,
+    size: 7,
+    sortBy: "createdAt",
+    sortDirection: "DESC",
+    type: "INCOMING",
+  });
 
   const fetchRecentDocuments = useCallback(async () => {
     try {
@@ -105,6 +118,29 @@ export function DocumentProvider({ children }: { children: React.ReactNode }) {
     setDocumentById(response.data);
   }, []);
 
+  const searchDocuments = useCallback(
+    async (request: SearchRequest) => {
+      try {
+        setLoading(true);
+        console.log("Searching with request:", request);
+        const response = await documentService.searchDocuments(request);
+        console.log("Search response:", response);
+        setDocuments(response.content);
+
+        const savedStatusCounts = pagination?.statusCounts;
+        setPagination({
+          ...response,
+          statusCounts: savedStatusCounts || response.statusCounts,
+        });
+      } catch (error) {
+        console.error("Error searching documents:", error);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [pagination?.statusCounts]
+  );
+
   return (
     <DocumentContext.Provider
       value={{
@@ -118,6 +154,9 @@ export function DocumentProvider({ children }: { children: React.ReactNode }) {
         pagination,
         fetchDocuments,
         fetchDocumentById,
+        searchDocuments,
+        searchParams,
+        setSearchParams,
       }}
     >
       {children}

@@ -1,5 +1,5 @@
 import { axiosInstance } from '@/lib/axios';
-import { Document, DocumentByIdResponse } from '@/types/document';
+import { Document, DocumentByIdResponse, PaginationResponse, SearchRequest } from '@/types/document';
 import { ApiResponse } from '@/types/document';
 
 export const documentService = {
@@ -15,9 +15,9 @@ export const documentService = {
         }
     },
 
-    getIncomingDocuments: async (page: number, size: number = 7): Promise<ApiResponse> => {
+    getIncomingDocuments: async (page: number, size: number = 7): Promise<ApiResponse<PaginationResponse>> => {
         try {
-            const response = await axiosInstance.get<ApiResponse>(`/documents/all?page=${page}&size=${size}&type=INCOMING`);
+            const response = await axiosInstance.get<ApiResponse<PaginationResponse>>(`/documents/all?page=${page}&size=${size}&type=INCOMING`);
             return response.data;
         } catch (error) {
             console.error('Error fetching documents:', error);
@@ -25,9 +25,9 @@ export const documentService = {
         }
     },
 
-    getOutgoingDocuments: async (page: number, size: number = 7): Promise<ApiResponse> => {
+    getOutgoingDocuments: async (page: number, size: number = 7): Promise<ApiResponse<PaginationResponse>> => {
         try {
-            const response = await axiosInstance.get<ApiResponse>(`/documents/all?page=${page}&size=${size}&type=OUTGOING`);
+            const response = await axiosInstance.get<ApiResponse<PaginationResponse>>(`/documents/all?page=${page}&size=${size}&type=OUTGOING`);
             return response.data;
         } catch (error) {
             console.error('Error fetching documents:', error);
@@ -41,6 +41,19 @@ export const documentService = {
             return response.data;
         } catch (error) {
             console.error('Error fetching document:', error);
+            throw error;
+        }
+    },
+
+    searchDocuments: async (searchRequest: SearchRequest): Promise<PaginationResponse> => {
+        try {
+            const response = await axiosInstance.post<PaginationResponse>(
+                '/documents/search',
+                searchRequest
+            );
+            return response.data;
+        } catch (error) {
+            console.error('Error searching documents:', error);
             throw error;
         }
     }
