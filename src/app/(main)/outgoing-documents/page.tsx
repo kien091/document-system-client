@@ -553,7 +553,24 @@ export default function IncomingDocumentsPage() {
                       </div>
                       <div>
                         <p className="text-gray-500 mb-1">Mức độ bảo mật</p>
-                        <p className="font-medium">Thường</p>
+                        {documentById?.secretLevel === "HIGH" && (
+                          <div className="flex items-center gap-2">
+                            <span className="w-2 h-2 bg-red-500 rounded-full"></span>
+                            <p className="font-medium text-red-500">Cao</p>
+                          </div>
+                        )}
+                        {documentById?.secretLevel === "MEDIUM" && (
+                          <div className="flex items-center gap-2">
+                            <span className="w-2 h-2 bg-yellow-500 rounded-full"></span>
+                            <p className="font-medium text-yellow-500">Trung bình</p>
+                          </div>
+                        )}
+                        {documentById?.secretLevel === "LOW" && (
+                          <div className="flex items-center gap-2">
+                            <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                            <p className="font-medium text-green-500">Thấp</p>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>

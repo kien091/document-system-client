@@ -311,8 +311,9 @@ export default function IncomingDocumentsPage() {
             </div>
             <button
               onClick={() => setIsAddModalOpen(true)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
             >
+              <Plus className="w-4 h-4" />
               Thêm mới
             </button>
             <button
@@ -547,7 +548,7 @@ export default function IncomingDocumentsPage() {
                         <div>
                           <p className="text-gray-500 mb-1">Ngày gửi/nhận</p>
                           <p className="font-medium">
-                            {documentById?.sendDate}
+                            {documentById?.receivedDate}
                           </p>
                         </div>
                         <div>
@@ -562,7 +563,24 @@ export default function IncomingDocumentsPage() {
                         </div>
                         <div>
                           <p className="text-gray-500 mb-1">Mức độ bảo mật</p>
-                          <p className="font-medium">Cao</p>
+                          {documentById?.secretLevel === "HIGH" && (
+                            <div className="flex items-center gap-2">
+                              <span className="w-2 h-2 bg-red-500 rounded-full"></span>
+                              <p className="font-medium text-red-500">Cao</p>
+                            </div>
+                          )}
+                          {documentById?.secretLevel === "MEDIUM" && (
+                            <div className="flex items-center gap-2">
+                              <span className="w-2 h-2 bg-yellow-500 rounded-full"></span>
+                              <p className="font-medium text-yellow-500">Trung bình</p>
+                            </div>
+                          )}
+                          {documentById?.secretLevel === "LOW" && (
+                            <div className="flex items-center gap-2">
+                              <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                              <p className="font-medium text-green-500">Thấp</p>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>

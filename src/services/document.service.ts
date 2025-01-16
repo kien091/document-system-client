@@ -1,5 +1,5 @@
 import { axiosInstance } from '@/lib/axios';
-import { Document, DocumentByIdResponse, PaginationResponse, SearchRequest } from '@/types/document';
+import { Document, DocumentByIdResponse, PaginationResponse, SearchRequest, CreateDocumentRequest } from '@/types/document';
 import { ApiResponse } from '@/types/document';
 
 export const documentService = {
@@ -54,6 +54,31 @@ export const documentService = {
             return response.data;
         } catch (error) {
             console.error('Error searching documents:', error);
+            throw error;
+        }
+    },
+
+    async createDocument(request: CreateDocumentRequest): Promise<Document> {
+        const formData = new FormData();
+
+        // Append all fields to formData
+        Object.keys(request).forEach(key => {
+            if (key === 'file') {
+                formData.append('file', request.file);
+            } else {
+                formData.append(key, request[key as keyof CreateDocumentRequest]?.toString() || '');
+            }
+        });
+
+        try {
+            const response = await axiosInstance.post<Document>('/documents/create', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
+            return response.data;
+        } catch (error) {
+            console.error('Error creating document:', error);
             throw error;
         }
     }

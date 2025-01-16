@@ -2,6 +2,15 @@ import { X, Upload, FileText } from "lucide-react";
 import { useState, useRef } from "react";
 import Image from "next/image";
 import { Input } from "@/components/ui/input";
+import { useDocuments } from "@/contexts/document.context";
+import { CreateDocumentRequest } from "@/types/document";
+import {
+  DocumentType,
+  DocumentStatus,
+  UrgencyLevel,
+  SecretLevel,
+} from "@/types/document";
+import { useAuth } from "@/contexts/auth.context";
 
 interface AddDocumentModalProps {
   isOpen: boolean;
@@ -12,8 +21,23 @@ export default function AddDocumentModal({
   isOpen,
   onClose,
 }: AddDocumentModalProps) {
+  const { createDocument } = useDocuments();
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(false);
   // Lấy ngày hôm nay định dạng YYYY-MM-DD
   const today = new Date().toISOString().split("T")[0];
+
+  const [formData, setFormData] = useState({
+    agencyUnit: "",
+    number: "",
+    issueDate: today,
+    title: "",
+    content: "",
+    urgencyLevel: UrgencyLevel.NORMAL,
+    receivedDate: today,
+    expirationDate: "",
+    secretLevel: SecretLevel.LOW,
+  });
 
   // Ref cho input file
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -45,6 +69,44 @@ export default function AddDocumentModal({
         );
       default:
         return <FileText className="w-8 h-8 text-gray-500" />;
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!selectedFile || !user) return;
+
+    try {
+      setLoading(true);
+
+      // Convert dates to ISO format with time
+      const formatDateTime = (date: string) => {
+        if (!date) return null;
+        return new Date(date).toISOString(); // Returns format: YYYY-MM-DDTHH:mm:ss.sssZ
+      };
+
+      const request: CreateDocumentRequest = {
+        number: formData.number,
+        title: formData.title || "",
+        content: formData.content,
+        issueDate: formatDateTime(formData.issueDate),
+        receivedDate: formatDateTime(formData.receivedDate),
+        sendDate: "",
+        agencyUnit: formData.agencyUnit,
+        expirationDate: formatDateTime(formData.expirationDate),
+        type: DocumentType.INCOMING,
+        status: DocumentStatus.PENDING,
+        urgencyLevel: formData.urgencyLevel as UrgencyLevel,
+        file: selectedFile,
+        userId: user.id,
+        secretLevel: formData.secretLevel as SecretLevel,
+      };
+
+      await createDocument(request);
+      onClose();
+    } catch (error) {
+      console.error("Error creating document:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -114,12 +176,16 @@ export default function AddDocumentModal({
             <div className="space-y-4">
               <div>
                 <label className="block text-xs mb-1">
-                  Tên đơn vị <span className="text-red-500">*</span>
+                  Tiêu đề <span className="text-red-500">*</span>
                 </label>
                 <Input
                   type="text"
                   className="w-full rounded-lg text-xs"
-                  placeholder="Nhập tên đơn vị"
+                  placeholder="Nhập tiêu đề công văn"
+                  value={formData.title}
+                  onChange={(e) =>
+                    setFormData({ ...formData, title: e.target.value })
+                  }
                 />
               </div>
 
@@ -132,6 +198,10 @@ export default function AddDocumentModal({
                     type="text"
                     className="w-full rounded-lg text-xs"
                     placeholder="Nhập số văn bản"
+                    value={formData.number}
+                    onChange={(e) =>
+                      setFormData({ ...formData, number: e.target.value })
+                    }
                   />
                 </div>
                 <div>
@@ -139,8 +209,11 @@ export default function AddDocumentModal({
                   <div className="relative">
                     <input
                       type="date"
-                      defaultValue={today}
-                      className="w-full border rounded-lg py-1 px-2 text-xs"
+                      value={formData.issueDate}
+                      onChange={(e) =>
+                        setFormData({ ...formData, issueDate: e.target.value })
+                      }
+                      className="w-full border rounded-lg py-2.5 px-2 text-xs border-gray-300 focus:outline-none focus:ring-0"
                     />
                   </div>
                 </div>
@@ -148,40 +221,65 @@ export default function AddDocumentModal({
 
               <div>
                 <label className="block text-xs mb-1">
+                  Tên đơn vị <span className="text-red-500">*</span>
+                </label>
+                <Input
+                  type="text"
+                  className="w-full rounded-lg text-xs"
+                  placeholder="Nhập tên đơn vị"
+                  value={formData.agencyUnit}
+                  onChange={(e) =>
+                    setFormData({ ...formData, agencyUnit: e.target.value })
+                  }
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs mb-1">
                   Mô tả ngắn gọn công văn{" "}
                   <span className="text-red-500">*</span>
                 </label>
-                <textarea className="w-full border rounded-lg p-2 h-20" />
+                <textarea
+                  className="w-full border rounded-lg p-2 h-20 focus:outline-none focus:ring-0 text-xs"
+                  value={formData.content}
+                  onChange={(e) =>
+                    setFormData({ ...formData, content: e.target.value })
+                  }
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs mb-1">Mức độ khẩn cấp</label>
-                  <select className="w-full border rounded-lg py-1 px-2 text-xs">
-                    <option value="">Chọn mức độ</option>
+                  <select
+                    className="w-full border rounded-lg py-2.5 px-2 text-xs border-gray-300 focus:outline-none focus:ring-0"
+                    value={formData.urgencyLevel}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        urgencyLevel: e.target.value as UrgencyLevel,
+                      })
+                    }
+                  >
+                    <option value={UrgencyLevel.NORMAL}>Bình thường</option>
+                    <option value={UrgencyLevel.IMPORTANT}>Khẩn cấp</option>
                   </select>
                 </div>
                 <div>
                   <label className="block text-xs mb-1">Mức độ bảo mật</label>
-                  <select className="w-full border rounded-lg py-1 px-2 text-xs">
-                    <option value="">Chọn mức độ</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs mb-1">Phòng ban</label>
-                  <select className="w-full border rounded-lg py-1 px-2 text-xs">
-                    <option value="">Chọn phòng ban</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs mb-1">
-                    Người chịu trách nhiệm
-                  </label>
-                  <select className="w-full border rounded-lg py-1 px-2 text-xs">
-                    <option value="">Chọn người phụ trách</option>
+                  <select
+                    className="w-full border rounded-lg py-2.5 px-2 text-xs border-gray-300 focus:outline-none focus:ring-0"
+                    value={formData.secretLevel}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        secretLevel: e.target.value as SecretLevel,
+                      })
+                    }
+                  >
+                    <option value={SecretLevel.LOW}>Thấp</option>
+                    <option value={SecretLevel.MEDIUM}>Trung bình</option>
+                    <option value={SecretLevel.HIGH}>Cao</option>
                   </select>
                 </div>
               </div>
@@ -192,8 +290,14 @@ export default function AddDocumentModal({
                   <div className="relative">
                     <input
                       type="date"
-                      defaultValue={today}
-                      className="w-full border rounded-lg py-1 px-2 text-xs"
+                      value={formData.receivedDate}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          receivedDate: e.target.value,
+                        })
+                      }
+                      className="w-full border rounded-lg py-1 px-2 text-xs focus:outline-none focus:ring-0"
                     />
                   </div>
                 </div>
@@ -204,7 +308,14 @@ export default function AddDocumentModal({
                   <div className="relative">
                     <input
                       type="date"
-                      className="w-full border rounded-lg py-1 px-2 text-xs"
+                      value={formData.expirationDate}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          expirationDate: e.target.value,
+                        })
+                      }
+                      className="w-full border rounded-lg py-1 px-2 text-xs focus:outline-none focus:ring-0"
                     />
                   </div>
                 </div>
@@ -221,8 +332,12 @@ export default function AddDocumentModal({
           >
             Hủy
           </button>
-          <button className="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-xs">
-            Lưu
+          <button
+            onClick={handleSubmit}
+            disabled={loading}
+            className="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-xs disabled:opacity-50"
+          >
+            {loading ? "Đang xử lý..." : "Lưu"}
           </button>
         </div>
       </div>

@@ -7,7 +7,12 @@ import {
   useCallback,
   useEffect,
 } from "react";
-import { Document, PaginationResponse, SearchRequest } from "@/types/document";
+import {
+  Document,
+  PaginationResponse,
+  SearchRequest,
+  CreateDocumentRequest,
+} from "@/types/document";
 import { documentService } from "@/services/document.service";
 
 interface DocumentContextType {
@@ -28,6 +33,7 @@ interface DocumentContextType {
   searchDocuments: (request: SearchRequest) => Promise<void>;
   searchParams: SearchRequest;
   setSearchParams: React.Dispatch<React.SetStateAction<SearchRequest>>;
+  createDocument: (request: CreateDocumentRequest) => Promise<Document>;
 }
 
 const DocumentContext = createContext<DocumentContextType | undefined>(
@@ -141,6 +147,24 @@ export function DocumentProvider({ children }: { children: React.ReactNode }) {
     [pagination?.statusCounts]
   );
 
+  const createDocument = useCallback(
+    async (request: CreateDocumentRequest) => {
+      try {
+        setLoading(true);
+        const response = await documentService.createDocument(request);
+        // Refresh documents list after creation
+        await fetchDocuments(0, 7, request.type);
+        return response;
+      } catch (error) {
+        console.error("Error creating document:", error);
+        throw error;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [fetchDocuments]
+  );
+
   return (
     <DocumentContext.Provider
       value={{
@@ -157,6 +181,7 @@ export function DocumentProvider({ children }: { children: React.ReactNode }) {
         searchDocuments,
         searchParams,
         setSearchParams,
+        createDocument,
       }}
     >
       {children}

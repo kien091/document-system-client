@@ -1,3 +1,47 @@
+export enum DocumentType {
+    INCOMING = "INCOMING",
+    OUTGOING = "OUTGOING",
+    INTERNAL = "INTERNAL",
+    UNKNOWN = "UNKNOWN"
+}
+
+export enum DocumentStatus {
+    PENDING = "PENDING",
+    PROCESSING = "PROCESSING",
+    COMPLETED = "COMPLETED",
+    REJECTED = "REJECTED"
+}
+
+export enum UrgencyLevel {
+    NORMAL = "NORMAL",
+    IMPORTANT = "IMPORTANT"
+}
+
+export enum SecretLevel {
+    HIGH = "HIGH",
+    MEDIUM = "MEDIUM",
+    LOW = "LOW"
+}
+
+export interface CreateDocumentRequest {
+    number: string;
+    title: string;
+    content: string;
+    issueDate: string | null;
+    receivedDate: string | null;
+    sendDate: string | null;
+    agencyUnit: string;
+    expirationDate: string | null;
+    type: DocumentType;
+    status: DocumentStatus;
+    urgencyLevel: UrgencyLevel;
+    keywords?: string;
+    logNote?: string;
+    file: File;
+    userId: string;
+    secretLevel: SecretLevel;
+}
+
 export interface Department {
     id: string;
     name: string;
@@ -25,9 +69,10 @@ export interface Document {
     number: string;
     title: string;
     content: string;
-    type: `INCOMING` | `OUTGOING` | `INTERNAL` | `UNKNOWN`;
-    status: `PENDING` | `PROCESSING` | `COMPLETED` | `REJECTED`;
-    urgencyLevel: `IMPORTANT` | `NORMAL`;
+    type: DocumentType;
+    status: DocumentStatus;
+    urgencyLevel: UrgencyLevel;
+    secretLevel: SecretLevel;
     agencyUnit: string;
     attachment: string;
     keywords: string;
