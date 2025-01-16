@@ -12,6 +12,7 @@ import {
   PaginationResponse,
   SearchRequest,
   CreateDocumentRequest,
+  DocumentFilterParams,
 } from "@/types/document";
 import { documentService } from "@/services/document.service";
 
@@ -34,6 +35,8 @@ interface DocumentContextType {
   searchParams: SearchRequest;
   setSearchParams: React.Dispatch<React.SetStateAction<SearchRequest>>;
   createDocument: (request: CreateDocumentRequest) => Promise<Document>;
+  suggestAgencyUnits: (keyword: string) => Promise<string[]>;
+  filterDocuments: (params: DocumentFilterParams) => Promise<void>;
 }
 
 const DocumentContext = createContext<DocumentContextType | undefined>(
@@ -128,9 +131,7 @@ export function DocumentProvider({ children }: { children: React.ReactNode }) {
     async (request: SearchRequest) => {
       try {
         setLoading(true);
-        console.log("Searching with request:", request);
         const response = await documentService.searchDocuments(request);
-        console.log("Search response:", response);
         setDocuments(response.content);
 
         const savedStatusCounts = pagination?.statusCounts;
@@ -165,6 +166,38 @@ export function DocumentProvider({ children }: { children: React.ReactNode }) {
     [fetchDocuments]
   );
 
+  const suggestAgencyUnits = async (keyword: string) => {
+    try {
+      const response = await documentService.suggestAgencyUnits(keyword);
+      return response.suggestions;
+    } catch (error) {
+      console.error("Error suggesting agency units:", error);
+      return [];
+    }
+  };
+
+  const filterDocuments = useCallback(async (params: DocumentFilterParams) => {
+    try {
+      setLoading(true);
+      const response = await documentService.filterDocuments(params);
+      setDocuments(response.data.content);
+
+      console.log("response", response);
+
+      const savedStatusCounts = pagination?.statusCounts;
+      const totalElements = response.data.totalElements;
+      setPagination({
+        ...response.data,
+        totalElements: totalElements,
+        statusCounts: savedStatusCounts || response.data.statusCounts,
+      });
+    } catch (error) {
+      console.error("Error in filterDocuments:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [pagination?.statusCounts]);
+
   return (
     <DocumentContext.Provider
       value={{
@@ -182,6 +215,8 @@ export function DocumentProvider({ children }: { children: React.ReactNode }) {
         searchParams,
         setSearchParams,
         createDocument,
+        suggestAgencyUnits,
+        filterDocuments,
       }}
     >
       {children}

@@ -9,7 +9,6 @@ export enum DocumentStatus {
     PENDING = "PENDING",
     PROCESSING = "PROCESSING",
     COMPLETED = "COMPLETED",
-    REJECTED = "REJECTED"
 }
 
 export enum UrgencyLevel {
@@ -156,5 +155,21 @@ export interface SearchRequest {
     sortBy: string;
     sortDirection: 'ASC' | 'DESC';
     type: 'INCOMING' | 'OUTGOING';
+}
+
+export interface AgencyUnitSuggestion {
+    suggestions: string[];
+}
+
+export interface DocumentFilterParams {
+    type: 'INCOMING' | 'OUTGOING';
+    agencyUnit?: string;
+    status?: DocumentStatus;
+    urgencyLevel?: UrgencyLevel;
+    secretLevel?: SecretLevel;
+    startDate?: string;
+    endDate?: string;
+    page?: number;
+    size?: number;
 }
 

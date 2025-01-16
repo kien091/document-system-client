@@ -1,5 +1,5 @@
 import { axiosInstance } from '@/lib/axios';
-import { Document, DocumentByIdResponse, PaginationResponse, SearchRequest, CreateDocumentRequest } from '@/types/document';
+import { Document, DocumentByIdResponse, PaginationResponse, SearchRequest, CreateDocumentRequest, AgencyUnitSuggestion, DocumentFilterParams } from '@/types/document';
 import { ApiResponse } from '@/types/document';
 
 export const documentService = {
@@ -79,6 +79,39 @@ export const documentService = {
             return response.data;
         } catch (error) {
             console.error('Error creating document:', error);
+            throw error;
+        }
+    },
+
+    async suggestAgencyUnits(keyword: string): Promise<AgencyUnitSuggestion> {
+        try {
+            const response = await axiosInstance.get(`documents/agency-units/suggest`, {
+                params: {
+                    keyword: keyword
+                }
+            });
+
+            return {
+                suggestions: response.data?.data.suggestions || []
+            };
+        } catch (error) {
+            console.error('Error suggesting agency units:', error);
+            return {
+                suggestions: []
+            };
+        }
+    },
+
+    filterDocuments: async (params: DocumentFilterParams): Promise<ApiResponse<PaginationResponse>> => {
+        try {
+            const response = await axiosInstance.get('/documents/filter', {
+                params: {
+                    ...params,
+                }
+            });
+            return response.data;
+        } catch (error) {
+            console.error('Error filtering documents:', error);
             throw error;
         }
     }

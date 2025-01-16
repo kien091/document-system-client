@@ -60,14 +60,28 @@ export default function FilterDocumentModal({
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Thời gian</label>
+            <label className="block text-sm font-medium mb-1">
+              Mức độ bảo mật
+            </label>
+            <select className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:border-blue-500">
+              <option value="">Tất cả mức độ</option>
+              <option value="HIGH">Cao</option>
+              <option value="MEDIUM">Trung bình</option>
+              <option value="LOW">Thấp</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">Hạn xử lý</label>
             <div className="grid grid-cols-2 gap-2">
               <input
                 type="date"
+                placeholder="Từ ngày"
                 className="px-3 py-2 border rounded-lg text-sm focus:outline-none focus:border-blue-500"
               />
               <input
                 type="date"
+                placeholder="Đến ngày"
                 className="px-3 py-2 border rounded-lg text-sm focus:outline-none focus:border-blue-500"
               />
             </div>
