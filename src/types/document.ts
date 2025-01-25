@@ -173,3 +173,48 @@ export interface DocumentFilterParams {
     size?: number;
 }
 
+export interface UpdateDocumentRequest {
+    number?: string;
+    title?: string;
+    content?: string;
+    issueDate?: string;
+    receivedDate?: string;
+    sendDate?: string;
+    expirationDate?: string;
+    agencyUnit?: string;
+    type?: DocumentType;
+    status?: DocumentStatus;
+    urgencyLevel?: UrgencyLevel;
+    secretLevel?: SecretLevel;
+    keywords?: string;
+    logNote?: string;
+    file?: File;
+}
+
+export interface UpdateDocumentResponse {
+    message: string;
+    data: {
+        documentId: string;
+        number: string;
+        title: string;
+        content: string;
+        issueDate: string;
+        receivedDate: string;
+        sendDate: string;
+        expirationDate: string;
+        agencyUnit: string;
+        type: DocumentType;
+        status: DocumentStatus;
+        urgencyLevel: UrgencyLevel;
+        secretLevel: SecretLevel;
+        attachment: string;
+        keywords: string;
+        logNote: string;
+        createdAt: string;
+        creator: {
+            id: string;
+            username: string;
+        }
+    }
+}
+

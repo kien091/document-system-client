@@ -13,6 +13,8 @@ import {
   SearchRequest,
   CreateDocumentRequest,
   DocumentFilterParams,
+  UpdateDocumentRequest,
+  UpdateDocumentResponse,
 } from "@/types/document";
 import { documentService } from "@/services/document.service";
 
@@ -37,6 +39,10 @@ interface DocumentContextType {
   createDocument: (request: CreateDocumentRequest) => Promise<Document>;
   suggestAgencyUnits: (keyword: string) => Promise<string[]>;
   filterDocuments: (params: DocumentFilterParams) => Promise<void>;
+  updateDocument: (
+    id: string,
+    data: UpdateDocumentRequest
+  ) => Promise<UpdateDocumentResponse["data"]>;
 }
 
 const DocumentContext = createContext<DocumentContextType | undefined>(
@@ -176,27 +182,44 @@ export function DocumentProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const filterDocuments = useCallback(async (params: DocumentFilterParams) => {
+  const filterDocuments = useCallback(
+    async (params: DocumentFilterParams) => {
+      try {
+        setLoading(true);
+        const response = await documentService.filterDocuments(params);
+        setDocuments(response.data.content);
+
+        console.log("response", response);
+
+        const savedStatusCounts = pagination?.statusCounts;
+        const totalElements = response.data.totalElements;
+        setPagination({
+          ...response.data,
+          totalElements: totalElements,
+          statusCounts: savedStatusCounts || response.data.statusCounts,
+        });
+      } catch (error) {
+        console.error("Error in filterDocuments:", error);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [pagination?.statusCounts]
+  );
+
+  const updateDocument = async (id: string, data: UpdateDocumentRequest) => {
     try {
       setLoading(true);
-      const response = await documentService.filterDocuments(params);
-      setDocuments(response.data.content);
-
-      console.log("response", response);
-
-      const savedStatusCounts = pagination?.statusCounts;
-      const totalElements = response.data.totalElements;
-      setPagination({
-        ...response.data,
-        totalElements: totalElements,
-        statusCounts: savedStatusCounts || response.data.statusCounts,
-      });
+      const response = await documentService.updateDocument(id, data);
+      await fetchDocuments();
+      return response.data;
     } catch (error) {
-      console.error("Error in filterDocuments:", error);
+      console.error("Error updating document:", error);
+      throw error;
     } finally {
       setLoading(false);
     }
-  }, [pagination?.statusCounts]);
+  };
 
   return (
     <DocumentContext.Provider
@@ -217,6 +240,7 @@ export function DocumentProvider({ children }: { children: React.ReactNode }) {
         createDocument,
         suggestAgencyUnits,
         filterDocuments,
+        updateDocument,
       }}
     >
       {children}

@@ -17,6 +17,7 @@ import {
   Edit2,
   Trash2,
   FileX,
+  Pencil,
 } from "lucide-react";
 import Image from "next/image";
 import { useState, useRef, useEffect, useMemo } from "react";
@@ -28,6 +29,9 @@ import { useDocuments } from "@/contexts/document.context";
 import { Document, SearchRequest } from "@/types/document";
 import { Loading } from "@/components/ui/loading";
 import { debounce } from "lodash";
+import EditDocumentModal from "./components/EditDocumentModal";
+import { Toast } from "@/components/ui/toast";
+import { useAuth } from "@/contexts/auth.context";
 
 export default function IncomingDocumentsPage() {
   const {
@@ -39,8 +43,9 @@ export default function IncomingDocumentsPage() {
     fetchDocumentById,
     searchDocuments,
   } = useDocuments();
+  const { user } = useAuth();
   const [activeFilter, setActiveFilter] = useState("all");
-  const [selectedDoc, setSelectedDoc] = useState<string | null>(null);
+  const [selectedDoc, setSelectedDoc] = useState<Document | null>(null);
   const [isClosing, setIsClosing] = useState(false);
   const [activeAction, setActiveAction] = useState("history");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -83,6 +88,9 @@ export default function IncomingDocumentsPage() {
   const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
   const [editContent, setEditContent] = useState("");
   const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showToast, setShowToast] = useState(false);
+  const [showDropdown, setShowDropdown] = useState<string | null>(null);
 
   // Load dữ liệu ban đầu khi vào trang
   useEffect(() => {
@@ -191,11 +199,11 @@ export default function IncomingDocumentsPage() {
   }, [selectedDoc, activeAction]);
 
   const handleDocumentClick = async (doc: Document) => {
-    if (selectedDoc === doc.documentId) {
+    if (selectedDoc === doc) {
       handleClose();
     } else {
       try {
-        setSelectedDoc(doc.documentId);
+        setSelectedDoc(doc);
         setActiveAction("history");
         await fetchDocumentById(doc.documentId);
       } catch (error) {
@@ -280,6 +288,16 @@ export default function IncomingDocumentsPage() {
     if (window.confirm("Bạn có chắc chắn muốn xóa bình luận này?")) {
       setComments(comments.filter((comment) => comment.id !== commentId));
     }
+  };
+
+  const handleEditSuccess = () => {
+    setShowEditModal(false);
+    setSelectedDoc(null);
+    setShowToast(true);
+  };
+
+  const canManageDocument = (document: Document) => {
+    return user?.role === "ADMIN" || document.creator?.userId === user?.id;
   };
 
   return (
@@ -440,9 +458,56 @@ export default function IncomingDocumentsPage() {
                     onClick={() => handleDocumentClick(doc)}
                   >
                     <div className="flex flex-col gap-2">
-                      <h3 className="font-medium line-clamp-2 text-sm">
-                        {doc.title}
-                      </h3>
+                      <div className="flex items-start justify-between gap-2">
+                        <h3 className="font-medium line-clamp-2 text-sm">
+                          {doc.title}
+                        </h3>
+                        {canManageDocument(doc) && (
+                          <div className="relative">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setShowDropdown(
+                                  showDropdown === doc.documentId ? null : doc.documentId
+                                );
+                              }}
+                              className="p-1 hover:bg-gray-100 rounded-full"
+                            >
+                              <MoreHorizontal className="w-4 h-4 text-gray-500" />
+                            </button>
+
+                            {/* Dropdown Menu */}
+                            {showDropdown === doc.documentId && (
+                              <div
+                                className="absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border py-1 z-10"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <button
+                                  onClick={() => {
+                                    setSelectedDoc(doc);
+                                    setShowEditModal(true);
+                                    setShowDropdown(null);
+                                  }}
+                                  className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2"
+                                >
+                                  <Pencil className="w-4 h-4" />
+                                  Chỉnh sửa
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    // Handle delete
+                                    setShowDropdown(null);
+                                  }}
+                                  className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 text-red-600 flex items-center gap-2"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                  Xóa
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
                       <div className="flex justify-between items-center">
                         <div className="text-sm text-gray-500">
                           {doc.issueDate}
@@ -572,7 +637,9 @@ export default function IncomingDocumentsPage() {
                           {documentById?.secretLevel === "MEDIUM" && (
                             <div className="flex items-center gap-2">
                               <span className="w-2 h-2 bg-yellow-500 rounded-full"></span>
-                              <p className="font-medium text-yellow-500">Trung bình</p>
+                              <p className="font-medium text-yellow-500">
+                                Trung bình
+                              </p>
                             </div>
                           )}
                           {documentById?.secretLevel === "LOW" && (
@@ -969,6 +1036,24 @@ export default function IncomingDocumentsPage() {
         <AddTaskModal
           isOpen={isAddTaskModalOpen}
           onClose={() => setIsAddTaskModalOpen(false)}
+        />
+
+        {selectedDoc && (
+          <EditDocumentModal
+            isOpen={showEditModal}
+            onClose={() => {
+              setShowEditModal(false);
+              setSelectedDoc(null);
+            }}
+            document={selectedDoc}
+            onSuccess={handleEditSuccess}
+          />
+        )}
+
+        <Toast
+          message="Cập nhật công văn đến thành công!"
+          isOpen={showToast}
+          onClose={() => setShowToast(false)}
         />
       </div>
     </>

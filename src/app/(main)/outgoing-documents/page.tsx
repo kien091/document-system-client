@@ -17,6 +17,7 @@ import {
   Edit2,
   Trash2,
   FileX,
+  Pencil,
 } from "lucide-react";
 import Image from "next/image";
 import { useState, useRef, useEffect, useMemo } from "react";
@@ -29,19 +30,23 @@ import { useDocuments } from "@/contexts/document.context";
 import { Document, SearchRequest } from "@/types/document";
 import { Loading } from "@/components/ui/loading";
 import { debounce } from "lodash";
+import EditDocumentModal from "./components/EditDocumentModal";
+import { Toast } from "@/components/ui/toast";
+import { useAuth } from "@/contexts/auth.context";
 
-export default function IncomingDocumentsPage() {
-  const { 
-    documents, 
-    documentById, 
-    pagination, 
-    loading, 
-    fetchDocuments, 
+export default function OutgoingDocumentsPage() {
+  const {
+    documents,
+    documentById,
+    pagination,
+    loading,
+    fetchDocuments,
     fetchDocumentById,
-    searchDocuments
+    searchDocuments,
   } = useDocuments();
+  const { user } = useAuth();
   const [activeFilter, setActiveFilter] = useState("all");
-  const [selectedDoc, setSelectedDoc] = useState<string | null>(null);
+  const [selectedDoc, setSelectedDoc] = useState<Document | null>(null);
   const [isClosing, setIsClosing] = useState(false);
   const [activeAction, setActiveAction] = useState("history");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -85,6 +90,9 @@ export default function IncomingDocumentsPage() {
   const [editContent, setEditContent] = useState("");
   const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
   const [isSigningModalOpen, setIsSigningModalOpen] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showToast, setShowToast] = useState(false);
+  const [showDropdown, setShowDropdown] = useState<string | null>(null);
 
   useEffect(() => {
     fetchDocuments(0, 7, "OUTGOING");
@@ -192,11 +200,11 @@ export default function IncomingDocumentsPage() {
   }, [selectedDoc, activeAction]);
 
   const handleDocumentClick = async (doc: Document) => {
-    if (selectedDoc === doc.documentId) {
+    if (selectedDoc === doc) {
       handleClose();
     } else {
       try {
-        setSelectedDoc(doc.documentId);
+        setSelectedDoc(doc);
         setActiveAction("history");
         await fetchDocumentById(doc.documentId);
       } catch (error) {
@@ -205,21 +213,20 @@ export default function IncomingDocumentsPage() {
     }
   };
 
-
   const handlePrint = () => {
     const fileUrl = "/files/601.BTTTT-CNTT.pdf"; // path to your file
 
     const printFrame = document.createElement("iframe");
-      printFrame.style.display = "none";
-      printFrame.src = fileUrl;
+    printFrame.style.display = "none";
+    printFrame.src = fileUrl;
 
-      document.body.appendChild(printFrame);
+    document.body.appendChild(printFrame);
 
-      printFrame.onload = () => {
-        setTimeout(() => {
-          printFrame.contentWindow?.print();
-        }, 300);
-      };
+    printFrame.onload = () => {
+      setTimeout(() => {
+        printFrame.contentWindow?.print();
+      }, 300);
+    };
   };
 
   const handleDownload = (fileUrl: string) => {
@@ -284,152 +291,164 @@ export default function IncomingDocumentsPage() {
     }
   };
 
+  const handleEditSuccess = () => {
+    setShowEditModal(false);
+    setSelectedDoc(null);
+    setShowToast(true);
+  };
+
+  const canManageDocument = (document: Document) => {
+    return user?.role === "ADMIN" || document.creator?.userId === user?.id;
+  };
+
   return (
     <>
       {loading && <Loading />}
       <div className="p-4 overflow-x-hidden">
-      {/* Page title */}
-      <div className="flex items-center gap-2 mb-6">
-        <h1 className="text-xl font-semibold">Công văn đi</h1>
-        <span className="text-gray-500">|</span>
-        <span className="text-gray-500">
-          Tất cả ({pagination?.totalElements})
-        </span>
-      </div>
+        {/* Page title */}
+        <div className="flex items-center gap-2 mb-6">
+          <h1 className="text-xl font-semibold">Công văn đi</h1>
+          <span className="text-gray-500">|</span>
+          <span className="text-gray-500">
+            Tất cả ({pagination?.totalElements})
+          </span>
+        </div>
 
-      {/* Header group with background */}
-      <div className="bg-gray-50 p-4 rounded-md mb-6">
-        {/* Search and actions */}
-        <div className="flex items-center gap-4 mb-4">
-          <div className="flex-1 relative">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={handleSearchChange}
-              placeholder="Tìm kiếm công văn..."
-              className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+        {/* Header group with background */}
+        <div className="bg-gray-50 p-4 rounded-md mb-6">
+          {/* Search and actions */}
+          <div className="flex items-center gap-4 mb-4">
+            <div className="flex-1 relative">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={handleSearchChange}
+                placeholder="Tìm kiếm công văn..."
+                className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <button
+              onClick={() => setIsAddModalOpen(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              <Plus className="w-4 h-4" />
+              Thêm mới
+            </button>
+            <button
+              onClick={() => setIsFilterModalOpen(true)}
+              className="p-2 hover:bg-gray-100 rounded-md"
+            >
+              <Filter className="w-5 h-5" />
+            </button>
+            <button className="p-2 hover:bg-gray-100 rounded-md">
+              <MoreHorizontal className="w-5 h-5" />
+            </button>
           </div>
-          <button
-            onClick={() => setIsAddModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-          >
-            <Plus className="w-4 h-4" />
-            Thêm mới
-          </button>
-          <button
-            onClick={() => setIsFilterModalOpen(true)}
-            className="p-2 hover:bg-gray-100 rounded-md"
-          >
-            <Filter className="w-5 h-5" />
-          </button>
-          <button className="p-2 hover:bg-gray-100 rounded-md">
-            <MoreHorizontal className="w-5 h-5" />
-          </button>
-        </div>
 
-        {/* Status filters */}
-        <div className="flex gap-3 overflow-x-auto">
-          <button
-            className={`px-4 py-2 rounded-full text-sm transition-colors ${
-              activeFilter === "all"
-                ? "bg-blue-500 text-white"
-                : "bg-gray-100 hover:bg-gray-200"
-            }`}
-            onClick={() => setActiveFilter("all")}
-          >
-            Tất cả{" "}
-            <span
-              className={
-                activeFilter === "all" ? "text-blue-100" : "text-gray-500"
-              }
+          {/* Status filters */}
+          <div className="flex gap-3 overflow-x-auto">
+            <button
+              className={`px-4 py-2 rounded-full text-sm transition-colors ${
+                activeFilter === "all"
+                  ? "bg-blue-500 text-white"
+                  : "bg-gray-100 hover:bg-gray-200"
+              }`}
+              onClick={() => setActiveFilter("all")}
             >
-              {pagination?.totalElements}
-            </span>
-          </button>
-          <button
-            className={`px-4 py-2 rounded-full text-sm transition-colors ${
-              activeFilter === "pending"
-                ? "bg-blue-500 text-white"
-                : "bg-gray-100 hover:bg-gray-200"
-            }`}
-            onClick={() => setActiveFilter("pending")}
-          >
-            Chưa xử lý{" "}
-            <span
-              className={
-                activeFilter === "pending" ? "text-blue-100" : "text-gray-500"
-              }
+              Tất cả{" "}
+              <span
+                className={
+                  activeFilter === "all" ? "text-blue-100" : "text-gray-500"
+                }
+              >
+                {pagination?.totalElements}
+              </span>
+            </button>
+            <button
+              className={`px-4 py-2 rounded-full text-sm transition-colors ${
+                activeFilter === "pending"
+                  ? "bg-blue-500 text-white"
+                  : "bg-gray-100 hover:bg-gray-200"
+              }`}
+              onClick={() => setActiveFilter("pending")}
             >
-              {pagination?.statusCounts.PENDING}
-            </span>
-          </button>
-          <button
-            className={`px-4 py-2 rounded-full text-sm transition-colors ${
-              activeFilter === "processing"
-                ? "bg-blue-500 text-white"
-                : "bg-gray-100 hover:bg-gray-200"
-            }`}
-            onClick={() => setActiveFilter("processing")}
-          >
-            Đang xử lý{" "}
-            <span
-              className={
+              Chưa xử lý{" "}
+              <span
+                className={
+                  activeFilter === "pending" ? "text-blue-100" : "text-gray-500"
+                }
+              >
+                {pagination?.statusCounts.PENDING}
+              </span>
+            </button>
+            <button
+              className={`px-4 py-2 rounded-full text-sm transition-colors ${
                 activeFilter === "processing"
-                  ? "text-blue-100"
-                  : "text-gray-500"
-              }
+                  ? "bg-blue-500 text-white"
+                  : "bg-gray-100 hover:bg-gray-200"
+              }`}
+              onClick={() => setActiveFilter("processing")}
             >
-              {pagination?.statusCounts.PROCESSING}
-            </span>
-          </button>
-          <button
-            className={`px-4 py-2 rounded-full text-sm transition-colors ${
-              activeFilter === "completed"
-                ? "bg-blue-500 text-white"
-                : "bg-gray-100 hover:bg-gray-200"
-            }`}
-            onClick={() => setActiveFilter("completed")}
-          >
-            Đã hoàn tất{" "}
-            <span
-              className={
-                activeFilter === "completed" ? "text-blue-100" : "text-gray-500"
-              }
+              Đang xử lý{" "}
+              <span
+                className={
+                  activeFilter === "processing"
+                    ? "text-blue-100"
+                    : "text-gray-500"
+                }
+              >
+                {pagination?.statusCounts.PROCESSING}
+              </span>
+            </button>
+            <button
+              className={`px-4 py-2 rounded-full text-sm transition-colors ${
+                activeFilter === "completed"
+                  ? "bg-blue-500 text-white"
+                  : "bg-gray-100 hover:bg-gray-200"
+              }`}
+              onClick={() => setActiveFilter("completed")}
             >
-              {pagination?.statusCounts.COMPLETED}
-            </span>
-          </button>
-          <button
-            className={`px-4 py-2 rounded-full text-sm transition-colors ${
-              activeFilter === "pinned"
-                ? "bg-blue-500 text-white"
-                : "bg-gray-100 hover:bg-gray-200"
-            }`}
-            onClick={() => setActiveFilter("pinned")}
-          >
-            Được ghim{" "}
-            <span
-              className={
-                activeFilter === "pinned" ? "text-blue-100" : "text-gray-500"
-              }
+              Đã hoàn tất{" "}
+              <span
+                className={
+                  activeFilter === "completed"
+                    ? "text-blue-100"
+                    : "text-gray-500"
+                }
+              >
+                {pagination?.statusCounts.COMPLETED}
+              </span>
+            </button>
+            <button
+              className={`px-4 py-2 rounded-full text-sm transition-colors ${
+                activeFilter === "pinned"
+                  ? "bg-blue-500 text-white"
+                  : "bg-gray-100 hover:bg-gray-200"
+              }`}
+              onClick={() => setActiveFilter("pinned")}
             >
-              7
-            </span>
-          </button>
+              Được ghim{" "}
+              <span
+                className={
+                  activeFilter === "pinned" ? "text-blue-100" : "text-gray-500"
+                }
+              >
+                7
+              </span>
+            </button>
+          </div>
         </div>
-      </div>
 
-      <div className="flex gap-6 transition-all duration-300 h-[calc(100vh+2rem)]">
-        {/* Main content */}
-        <div
-          className={`flex-1 transition-all duration-300 flex flex-col ${
-            selectedDoc ? "w-[44%]" : "w-full"
-          }`}
-        >
-          {/* Documents list */}
-          <div className="flex-1 bg-white rounded-lg shadow divide-y mb-4 overflow-y-auto">
+        <div className="flex gap-6 transition-all duration-300 h-[calc(100vh+2rem)]">
+          {/* Main content */}
+          <div
+            className={`flex-1 transition-all duration-300 flex flex-col ${
+              selectedDoc ? "w-[44%]" : "w-full"
+            }`}
+          >
+            {/* Documents list */}
+            <div className="flex-1 bg-white rounded-lg shadow divide-y mb-4 overflow-y-auto">
               {documents.length > 0 ? (
                 documents.map((doc, index) => (
                   <div
@@ -440,9 +459,58 @@ export default function IncomingDocumentsPage() {
                     onClick={() => handleDocumentClick(doc)}
                   >
                     <div className="flex flex-col gap-2">
-                      <h3 className="font-medium line-clamp-2 text-sm">
-                        {doc.title}
-                      </h3>
+                      <div className="flex items-start justify-between gap-2">
+                        <h3 className="font-medium line-clamp-2 text-sm">
+                          {doc.title}
+                        </h3>
+                        {canManageDocument(doc) && (
+                          <div className="relative">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setShowDropdown(
+                                  showDropdown === doc.documentId
+                                    ? null
+                                    : doc.documentId
+                                );
+                              }}
+                              className="p-1 hover:bg-gray-100 rounded-full"
+                            >
+                              <MoreHorizontal className="w-4 h-4 text-gray-500" />
+                            </button>
+
+                            {/* Dropdown Menu */}
+                            {showDropdown === doc.documentId && (
+                              <div
+                                className="absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border py-1 z-10"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <button
+                                  onClick={() => {
+                                    setSelectedDoc(doc);
+                                    setShowEditModal(true);
+                                    setShowDropdown(null);
+                                  }}
+                                  className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2"
+                                >
+                                  <Pencil className="w-4 h-4" />
+                                  Chỉnh sửa
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    // Handle delete
+                                    setShowDropdown(null);
+                                  }}
+                                  className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 text-red-600 flex items-center gap-2"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                  Xóa
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
                       <div className="flex justify-between items-center">
                         <div className="text-sm text-gray-500">
                           {doc.issueDate}
@@ -468,8 +536,8 @@ export default function IncomingDocumentsPage() {
               )}
             </div>
 
-          {/* Pagination */}
-          {pagination && (
+            {/* Pagination */}
+            {pagination && (
               <div className="flex justify-center gap-2">
                 {Array.from({ length: pagination.totalPages }, (_, i) => (
                   <button
@@ -486,487 +554,518 @@ export default function IncomingDocumentsPage() {
                 ))}
               </div>
             )}
-        </div>
+          </div>
 
-        {/* Selected Document Card */}
-        {(selectedDoc || isClosing) && (
-          <div
-            className="w-[56%] h-full transition-all duration-300 transform"
-            style={{
-              animation: isClosing
-                ? "slideOut 0.3s ease-out forwards"
-                : "slideIn 0.3s ease-out",
-            }}
-          >
-            <div className="bg-white rounded-lg shadow h-full flex flex-col">
-              {/* Header with close button - fixed height */}
-              <div className="shrink-0 p-4 border-b">
-                <div className="flex justify-between items-start p-4">
-                  <div className="flex-1">
-                    <h3 className="font-medium mb-1">
-                      {documentById?.title}
-                    </h3>
-                    <div className="flex items-center gap-2">
-                      <Building className="w-4 h-4 text-gray-500" />
-                      <span className="text-sm text-gray-500">
-                        {documentById?.agencyUnit}
-                      </span>
+          {/* Selected Document Card */}
+          {(selectedDoc || isClosing) && (
+            <div
+              className="w-[56%] h-full transition-all duration-300 transform"
+              style={{
+                animation: isClosing
+                  ? "slideOut 0.3s ease-out forwards"
+                  : "slideIn 0.3s ease-out",
+              }}
+            >
+              <div className="bg-white rounded-lg shadow h-full flex flex-col">
+                {/* Header with close button - fixed height */}
+                <div className="shrink-0 p-4 border-b">
+                  <div className="flex justify-between items-start p-4">
+                    <div className="flex-1">
+                      <h3 className="font-medium mb-1">
+                        {documentById?.title}
+                      </h3>
+                      <div className="flex items-center gap-2">
+                        <Building className="w-4 h-4 text-gray-500" />
+                        <span className="text-sm text-gray-500">
+                          {documentById?.agencyUnit}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <span className="px-3 py-1 bg-blue-50 text-blue-500 rounded-full text-sm">
-                      Mới tạo
-                    </span>
-                    <button
-                      onClick={handleClose}
-                      className="p-1.5 hover:bg-gray-100 rounded-full transition-colors"
-                    >
-                      <X className="w-4 h-4 text-gray-500" />
-                    </button>
+                    <div className="flex items-start gap-3">
+                      <span className="px-3 py-1 bg-blue-50 text-blue-500 rounded-full text-sm">
+                        Mới tạo
+                      </span>
+                      <button
+                        onClick={handleClose}
+                        className="p-1.5 hover:bg-gray-100 rounded-full transition-colors"
+                      >
+                        <X className="w-4 h-4 text-gray-500" />
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Info Grid - fixed height */}
-              <div className="shrink-0 p-4 border-b">
-                <div className="grid grid-cols-3 gap-6 text-sm">
-                  <div className="col-span-2">
-                    <div className="grid grid-cols-2 gap-6">
-                      <div>
-                        <p className="text-gray-500 mb-1">Số văn bản</p>
-                        <p className="font-medium">{documentById?.number}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-500 mb-1">Ngày tạo</p>
-                        <p className="font-medium">{documentById?.issueDate}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-500 mb-1">Ngày gửi/nhận</p>
-                        <p className="font-medium">{documentById?.sendDate}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-500 mb-1">Hạn phản hồi</p>
-                        <p className="font-medium">{documentById?.expirationDate}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-500 mb-1">Phân loại</p>
-                        <p className="font-medium">Công văn</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-500 mb-1">Mức độ bảo mật</p>
-                        {documentById?.secretLevel === "HIGH" && (
-                          <div className="flex items-center gap-2">
-                            <span className="w-2 h-2 bg-red-500 rounded-full"></span>
-                            <p className="font-medium text-red-500">Cao</p>
-                          </div>
-                        )}
-                        {documentById?.secretLevel === "MEDIUM" && (
-                          <div className="flex items-center gap-2">
-                            <span className="w-2 h-2 bg-yellow-500 rounded-full"></span>
-                            <p className="font-medium text-yellow-500">Trung bình</p>
-                          </div>
-                        )}
-                        {documentById?.secretLevel === "LOW" && (
-                          <div className="flex items-center gap-2">
-                            <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                            <p className="font-medium text-green-500">Thấp</p>
-                          </div>
-                        )}
+                {/* Info Grid - fixed height */}
+                <div className="shrink-0 p-4 border-b">
+                  <div className="grid grid-cols-3 gap-6 text-sm">
+                    <div className="col-span-2">
+                      <div className="grid grid-cols-2 gap-6">
+                        <div>
+                          <p className="text-gray-500 mb-1">Số văn bản</p>
+                          <p className="font-medium">{documentById?.number}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-500 mb-1">Ngày tạo</p>
+                          <p className="font-medium">
+                            {documentById?.issueDate}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-gray-500 mb-1">Ngày gửi/nhận</p>
+                          <p className="font-medium">
+                            {documentById?.sendDate}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-gray-500 mb-1">Hạn phản hồi</p>
+                          <p className="font-medium">
+                            {documentById?.expirationDate}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-gray-500 mb-1">Phân loại</p>
+                          <p className="font-medium">Công văn</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-500 mb-1">Mức độ bảo mật</p>
+                          {documentById?.secretLevel === "HIGH" && (
+                            <div className="flex items-center gap-2">
+                              <span className="w-2 h-2 bg-red-500 rounded-full"></span>
+                              <p className="font-medium text-red-500">Cao</p>
+                            </div>
+                          )}
+                          {documentById?.secretLevel === "MEDIUM" && (
+                            <div className="flex items-center gap-2">
+                              <span className="w-2 h-2 bg-yellow-500 rounded-full"></span>
+                              <p className="font-medium text-yellow-500">
+                                Trung bình
+                              </p>
+                            </div>
+                          )}
+                          {documentById?.secretLevel === "LOW" && (
+                            <div className="flex items-center gap-2">
+                              <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                              <p className="font-medium text-green-500">Thấp</p>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <div>
-                    <p className="text-gray-500 mb-1">Mức độ khẩn cấp</p>
-                    {
-                      documentById?.urgencyLevel === "IMPORTANT" && (
+                    <div>
+                      <p className="text-gray-500 mb-1">Mức độ khẩn cấp</p>
+                      {documentById?.urgencyLevel === "IMPORTANT" && (
                         <div className="flex items-center gap-2">
                           <span className="w-2 h-2 bg-red-500 rounded-full"></span>
                           <p className="font-medium text-red-500">Hỏa tốc</p>
                         </div>
-                      )
-                    }
-                    {
-                      documentById?.urgencyLevel === "NORMAL" && (
+                      )}
+                      {documentById?.urgencyLevel === "NORMAL" && (
                         <div className="flex items-center gap-2">
                           <span className="w-2 h-2 bg-yellow-500 rounded-full"></span>
-                          <p className="font-medium text-yellow-500">Bình thường</p>
+                          <p className="font-medium text-yellow-500">
+                            Bình thường
+                          </p>
                         </div>
-                      )
-                    }
+                      )}
+                    </div>
                   </div>
-                </div>
 
-                <div className="mt-4 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Image
-                      src="/images/icon/pdf.png"
-                      alt="PDF"
-                      width={24}
-                      height={24}
-                    />
-                    <span className="text-sm text-gray-600">
-                      {documentById?.number}.pdf
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-                      title="Xem"
-                      onClick={() => setIsPreviewOpen(true)}
-                    >
-                      <Eye className="w-4 h-4 text-gray-600" />
-                    </button>
-                    <button
-                      className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-                      title="In"
-                      onClick={handlePrint}
-                    >
-                      <Printer className="w-4 h-4 text-gray-600" />
-                    </button>
-                    <button
-                      className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-                      title="Tải về"
-                      onClick={() =>
-                        handleDownload("/files/601.BTTTT-CNTT.pdf")
-                      }
-                    >
-                      <Download className="w-4 h-4 text-gray-600" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Timeline section - flexible height with scroll */}
-              {activeAction === "history" && (
-                <div className="flex-1 min-h-0 border-b">
-                  <div className="h-full overflow-y-auto">
-                    <div className="p-4 space-y-4">
-                      {Array.from({ length: 10 }).map((_, index) => (
-                        <div key={index} className="flex gap-4">
-                          {/* Time and date column */}
-                          <div className="flex flex-col items-end min-w-[100px]">
-                            <div className="text-lg font-medium text-blue-600">
-                              14:40
-                            </div>
-                            <div className="text-gray-500 text-sm">
-                              11/11/2024
-                            </div>
-                          </div>
-
-                          {/* User info */}
-                          <div className="flex gap-3">
-                            <Image
-                              src="/images/avatar.png"
-                              alt="User"
-                              width={32}
-                              height={32}
-                              className="rounded-full w-8 h-8 object-cover"
-                            />
-                            <div className="flex flex-col">
-                              <p className="font-medium">Nguyễn Trung Kiên</p>
-                              <p className="text-gray-500 text-sm">
-                                Giảng viên khoa Công nghệ thông tin
-                              </p>
-                              <p className="text-gray-500 text-sm">
-                                Nhận từ Phòng Đại học
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
+                  <div className="mt-4 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Image
+                        src="/images/icon/pdf.png"
+                        alt="PDF"
+                        width={24}
+                        height={24}
+                      />
+                      <span className="text-sm text-gray-600">
+                        {documentById?.number}.pdf
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                        title="Xem"
+                        onClick={() => setIsPreviewOpen(true)}
+                      >
+                        <Eye className="w-4 h-4 text-gray-600" />
+                      </button>
+                      <button
+                        className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                        title="In"
+                        onClick={handlePrint}
+                      >
+                        <Printer className="w-4 h-4 text-gray-600" />
+                      </button>
+                      <button
+                        className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                        title="Tải về"
+                        onClick={() =>
+                          handleDownload("/files/601.BTTTT-CNTT.pdf")
+                        }
+                      >
+                        <Download className="w-4 h-4 text-gray-600" />
+                      </button>
                     </div>
                   </div>
                 </div>
-              )}
 
-              {/* Comments section */}
-              {activeAction === "comments" && (
-                <div className="flex-1 min-h-0 border-b">
-                  <div className="h-full flex flex-col">
-                    <div className="flex-1 overflow-y-auto">
+                {/* Timeline section - flexible height with scroll */}
+                {activeAction === "history" && (
+                  <div className="flex-1 min-h-0 border-b">
+                    <div className="h-full overflow-y-auto">
                       <div className="p-4 space-y-4">
-                        {comments.map((comment) => (
-                          <div key={comment.id} className="flex gap-3">
-                            <Image
-                              src={comment.avatar}
-                              alt={comment.user}
-                              width={32}
-                              height={32}
-                              className="rounded-full w-8 h-8 object-cover shrink-0 mt-3"
-                            />
-                            <div className="flex-1">
-                              <div className="bg-gray-50 rounded-lg p-3">
-                                <div className="flex justify-between items-start mb-1">
-                                  <div>
-                                    <p className="font-medium text-sm">
-                                      {comment.user}
-                                    </p>
-                                    <p className="text-xs text-gray-500">
-                                      {comment.position} ({comment.department})
-                                    </p>
-                                  </div>
-                                  <div className="flex items-center gap-2">
-                                    <button
-                                      className="p-1 hover:bg-gray-200 rounded-full"
-                                      onClick={() =>
-                                        handleEditComment(
-                                          comment.id,
-                                          comment.content
-                                        )
-                                      }
-                                    >
-                                      <Edit2 className="w-3.5 h-3.5 text-blue-500" />
-                                    </button>
-                                    <button
-                                      className="p-1 hover:bg-gray-200 rounded-full"
-                                      onClick={() =>
-                                        handleDeleteComment(comment.id)
-                                      }
-                                    >
-                                      <Trash2 className="w-3.5 h-3.5 text-red-500" />
-                                    </button>
-                                  </div>
-                                </div>
-                                {editingCommentId === comment.id ? (
-                                  <div className="flex gap-2">
-                                    <input
-                                      type="text"
-                                      value={editContent}
-                                      onChange={(e) =>
-                                        setEditContent(e.target.value)
-                                      }
-                                      onKeyDown={(e) =>
-                                        e.key === "Enter" &&
-                                        handleSaveEdit(comment.id)
-                                      }
-                                      className="flex-1 border rounded-lg px-3 py-1 text-sm focus:outline-none focus:border-blue-500"
-                                      autoFocus
-                                    />
-                                    <button
-                                      onClick={() => handleSaveEdit(comment.id)}
-                                      className="px-3 py-1 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700"
-                                    >
-                                      Lưu
-                                    </button>
-                                    <button
-                                      onClick={() => setEditingCommentId(null)}
-                                      className="px-3 py-1 bg-gray-100 text-gray-600 rounded-lg text-sm hover:bg-gray-200"
-                                    >
-                                      Hủy
-                                    </button>
-                                  </div>
-                                ) : (
-                                  <p className="text-sm">{comment.content}</p>
-                                )}
+                        {Array.from({ length: 10 }).map((_, index) => (
+                          <div key={index} className="flex gap-4">
+                            {/* Time and date column */}
+                            <div className="flex flex-col items-end min-w-[100px]">
+                              <div className="text-lg font-medium text-blue-600">
+                                14:40
                               </div>
-                              <div className="flex items-center gap-4 mt-1 text-xs text-gray-500 mx-3">
-                                <span>{comment.time}</span>
-                                <span>{comment.date}</span>
+                              <div className="text-gray-500 text-sm">
+                                11/11/2024
+                              </div>
+                            </div>
+
+                            {/* User info */}
+                            <div className="flex gap-3">
+                              <Image
+                                src="/images/avatar.png"
+                                alt="User"
+                                width={32}
+                                height={32}
+                                className="rounded-full w-8 h-8 object-cover"
+                              />
+                              <div className="flex flex-col">
+                                <p className="font-medium">Nguyễn Trung Kiên</p>
+                                <p className="text-gray-500 text-sm">
+                                  Giảng viên khoa Công nghệ thông tin
+                                </p>
+                                <p className="text-gray-500 text-sm">
+                                  Nhận từ Phòng Đại học
+                                </p>
                               </div>
                             </div>
                           </div>
                         ))}
                       </div>
                     </div>
+                  </div>
+                )}
 
-                    {/* Comment input */}
-                    <div className="p-4 border-t">
-                      <div className="flex gap-3">
-                        <Image
-                          src="/images/avatar.png"
-                          alt="User"
-                          width={32}
-                          height={32}
-                          className="rounded-full w-8 h-8 object-cover shrink-0"
-                        />
-                        <div className="flex-1 flex gap-2">
-                          <input
-                            type="text"
-                            placeholder="Viết bình luận..."
-                            value={newComment}
-                            onChange={(e) => setNewComment(e.target.value)}
-                            onKeyDown={(e) =>
-                              e.key === "Enter" && handleAddComment()
-                            }
-                            className="flex-1 border rounded-full px-4 py-1.5 text-sm focus:outline-none focus:border-blue-500"
+                {/* Comments section */}
+                {activeAction === "comments" && (
+                  <div className="flex-1 min-h-0 border-b">
+                    <div className="h-full flex flex-col">
+                      <div className="flex-1 overflow-y-auto">
+                        <div className="p-4 space-y-4">
+                          {comments.map((comment) => (
+                            <div key={comment.id} className="flex gap-3">
+                              <Image
+                                src={comment.avatar}
+                                alt={comment.user}
+                                width={32}
+                                height={32}
+                                className="rounded-full w-8 h-8 object-cover shrink-0 mt-3"
+                              />
+                              <div className="flex-1">
+                                <div className="bg-gray-50 rounded-lg p-3">
+                                  <div className="flex justify-between items-start mb-1">
+                                    <div>
+                                      <p className="font-medium text-sm">
+                                        {comment.user}
+                                      </p>
+                                      <p className="text-xs text-gray-500">
+                                        {comment.position} ({comment.department}
+                                        )
+                                      </p>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <button
+                                        className="p-1 hover:bg-gray-200 rounded-full"
+                                        onClick={() =>
+                                          handleEditComment(
+                                            comment.id,
+                                            comment.content
+                                          )
+                                        }
+                                      >
+                                        <Edit2 className="w-3.5 h-3.5 text-blue-500" />
+                                      </button>
+                                      <button
+                                        className="p-1 hover:bg-gray-200 rounded-full"
+                                        onClick={() =>
+                                          handleDeleteComment(comment.id)
+                                        }
+                                      >
+                                        <Trash2 className="w-3.5 h-3.5 text-red-500" />
+                                      </button>
+                                    </div>
+                                  </div>
+                                  {editingCommentId === comment.id ? (
+                                    <div className="flex gap-2">
+                                      <input
+                                        type="text"
+                                        value={editContent}
+                                        onChange={(e) =>
+                                          setEditContent(e.target.value)
+                                        }
+                                        onKeyDown={(e) =>
+                                          e.key === "Enter" &&
+                                          handleSaveEdit(comment.id)
+                                        }
+                                        className="flex-1 border rounded-lg px-3 py-1 text-sm focus:outline-none focus:border-blue-500"
+                                        autoFocus
+                                      />
+                                      <button
+                                        onClick={() =>
+                                          handleSaveEdit(comment.id)
+                                        }
+                                        className="px-3 py-1 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700"
+                                      >
+                                        Lưu
+                                      </button>
+                                      <button
+                                        onClick={() =>
+                                          setEditingCommentId(null)
+                                        }
+                                        className="px-3 py-1 bg-gray-100 text-gray-600 rounded-lg text-sm hover:bg-gray-200"
+                                      >
+                                        Hủy
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <p className="text-sm">{comment.content}</p>
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-4 mt-1 text-xs text-gray-500 mx-3">
+                                  <span>{comment.time}</span>
+                                  <span>{comment.date}</span>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Comment input */}
+                      <div className="p-4 border-t">
+                        <div className="flex gap-3">
+                          <Image
+                            src="/images/avatar.png"
+                            alt="User"
+                            width={32}
+                            height={32}
+                            className="rounded-full w-8 h-8 object-cover shrink-0"
                           />
-                          <button
-                            onClick={handleAddComment}
-                            className="px-4 py-1.5 bg-blue-600 text-white rounded-full text-sm hover:bg-blue-700"
-                          >
-                            Gửi
-                          </button>
+                          <div className="flex-1 flex gap-2">
+                            <input
+                              type="text"
+                              placeholder="Viết bình luận..."
+                              value={newComment}
+                              onChange={(e) => setNewComment(e.target.value)}
+                              onKeyDown={(e) =>
+                                e.key === "Enter" && handleAddComment()
+                              }
+                              className="flex-1 border rounded-full px-4 py-1.5 text-sm focus:outline-none focus:border-blue-500"
+                            />
+                            <button
+                              onClick={handleAddComment}
+                              className="px-4 py-1.5 bg-blue-600 text-white rounded-full text-sm hover:bg-blue-700"
+                            >
+                              Gửi
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* Tasks section */}
-              {activeAction === "tasks" && (
-                <div className="flex-1 min-h-0 border-b">
-                  <div className="h-full overflow-y-auto">
-                    <div className="p-4 space-y-3">
-                      {/* Task items */}
-                      {Array.from({ length: 3 }).map((_, index) => (
-                        <div
-                          key={index}
-                          className="flex items-start gap-3 p-3 border rounded-lg"
-                        >
-                          <input type="checkbox" className="mt-1" />
-                          <div className="flex-1">
-                            <p className="text-sm font-medium">
-                              Xem xét và phê duyệt văn bản
-                            </p>
-                            <div className="flex items-center gap-3 mt-2 text-xs text-gray-500">
-                              <div className="flex items-center gap-1">
-                                <Clock className="w-3.5 h-3.5" />
-                                <span>Hạn: 20/03/2024</span>
-                              </div>
-                              <div className="flex items-center gap-1">
-                                <Image
-                                  src="/images/avatar.png"
-                                  alt="User"
-                                  width={16}
-                                  height={16}
-                                  className="rounded-full w-4 h-4 object-cover shrink-0"
-                                />
-                                <span>Nguyễn Trung Kiên</span>
+                {/* Tasks section */}
+                {activeAction === "tasks" && (
+                  <div className="flex-1 min-h-0 border-b">
+                    <div className="h-full overflow-y-auto">
+                      <div className="p-4 space-y-3">
+                        {/* Task items */}
+                        {Array.from({ length: 3 }).map((_, index) => (
+                          <div
+                            key={index}
+                            className="flex items-start gap-3 p-3 border rounded-lg"
+                          >
+                            <input type="checkbox" className="mt-1" />
+                            <div className="flex-1">
+                              <p className="text-sm font-medium">
+                                Xem xét và phê duyệt văn bản
+                              </p>
+                              <div className="flex items-center gap-3 mt-2 text-xs text-gray-500">
+                                <div className="flex items-center gap-1">
+                                  <Clock className="w-3.5 h-3.5" />
+                                  <span>Hạn: 20/03/2024</span>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <Image
+                                    src="/images/avatar.png"
+                                    alt="User"
+                                    width={16}
+                                    height={16}
+                                    className="rounded-full w-4 h-4 object-cover shrink-0"
+                                  />
+                                  <span>Nguyễn Trung Kiên</span>
+                                </div>
                               </div>
                             </div>
+                            <div className="relative">
+                              <button
+                                className="p-1.5 hover:bg-gray-100 rounded-full"
+                                onClick={() => setIsSigningModalOpen(true)}
+                              >
+                                <MoreVertical className="w-4 h-4 text-gray-500" />
+                              </button>
+                            </div>
                           </div>
-                          <div className="relative">
-                            <button
-                              className="p-1.5 hover:bg-gray-100 rounded-full"
-                              onClick={() => setIsSigningModalOpen(true)}
-                            >
-                              <MoreVertical className="w-4 h-4 text-gray-500" />
-                            </button>
-                          </div>
-                        </div>
-                      ))}
+                        ))}
 
-                      {/* Add task button */}
-                      <button
-                        className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 p-2"
-                        onClick={() => setIsAddTaskModalOpen(true)}
-                      >
-                        <Plus className="w-4 h-4" />
-                        Thêm công việc mới
-                      </button>
+                        {/* Add task button */}
+                        <button
+                          className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 p-2"
+                          onClick={() => setIsAddTaskModalOpen(true)}
+                        >
+                          <Plus className="w-4 h-4" />
+                          Thêm công việc mới
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* Actions */}
-              <div className="flex-shrink-0 px-4 py-3 border-t">
-                <div className="flex gap-8 relative">
-                  <button
-                    ref={historyRef}
-                    className={`flex items-center gap-2 pb-2 relative transition-colors ${
-                      activeAction === "history"
-                        ? "text-blue-600"
-                        : "text-gray-500 hover:text-gray-700"
-                    }`}
-                    onClick={() => setActiveAction("history")}
-                  >
-                    <History className="w-4 h-4" />
-                    <span>Lịch sử</span>
-                  </button>
+                {/* Actions */}
+                <div className="flex-shrink-0 px-4 py-3 border-t">
+                  <div className="flex gap-8 relative">
+                    <button
+                      ref={historyRef}
+                      className={`flex items-center gap-2 pb-2 relative transition-colors ${
+                        activeAction === "history"
+                          ? "text-blue-600"
+                          : "text-gray-500 hover:text-gray-700"
+                      }`}
+                      onClick={() => setActiveAction("history")}
+                    >
+                      <History className="w-4 h-4" />
+                      <span>Lịch sử</span>
+                    </button>
 
-                  <button
-                    ref={commentsRef}
-                    className={`flex items-center gap-2 pb-2 relative transition-colors ${
-                      activeAction === "comments"
-                        ? "text-blue-600"
-                        : "text-gray-500 hover:text-gray-700"
-                    }`}
-                    onClick={() => setActiveAction("comments")}
-                  >
-                    <MessageCircle className="w-4 h-4" />
-                    <span>Bình luận</span>
-                  </button>
+                    <button
+                      ref={commentsRef}
+                      className={`flex items-center gap-2 pb-2 relative transition-colors ${
+                        activeAction === "comments"
+                          ? "text-blue-600"
+                          : "text-gray-500 hover:text-gray-700"
+                      }`}
+                      onClick={() => setActiveAction("comments")}
+                    >
+                      <MessageCircle className="w-4 h-4" />
+                      <span>Bình luận</span>
+                    </button>
 
-                  <button
-                    ref={tasksRef}
-                    className={`flex items-center gap-2 pb-2 relative transition-colors ${
-                      activeAction === "tasks"
-                        ? "text-blue-600"
-                        : "text-gray-500 hover:text-gray-700"
-                    }`}
-                    onClick={() => setActiveAction("tasks")}
-                  >
-                    <CheckSquare className="w-4 h-4" />
-                    <span>Công việc</span>
-                  </button>
+                    <button
+                      ref={tasksRef}
+                      className={`flex items-center gap-2 pb-2 relative transition-colors ${
+                        activeAction === "tasks"
+                          ? "text-blue-600"
+                          : "text-gray-500 hover:text-gray-700"
+                      }`}
+                      onClick={() => setActiveAction("tasks")}
+                    >
+                      <CheckSquare className="w-4 h-4" />
+                      <span>Công việc</span>
+                    </button>
 
-                  {/* Animated border bottom */}
-                  <div
-                    className="absolute bottom-0 h-0.5 bg-blue-600 transition-all duration-200 ease-out"
-                    style={{
-                      left: indicatorStyle.left,
-                      width: indicatorStyle.width,
-                    }}
-                  />
+                    {/* Animated border bottom */}
+                    <div
+                      className="absolute bottom-0 h-0.5 bg-blue-600 transition-all duration-200 ease-out"
+                      style={{
+                        left: indicatorStyle.left,
+                        width: indicatorStyle.width,
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          )}
+        </div>
+
+        <style jsx>{`
+          @keyframes slideIn {
+            from {
+              transform: translateX(100%);
+              opacity: 0;
+            }
+            to {
+              transform: translateX(0);
+              opacity: 1;
+            }
+          }
+          @keyframes slideOut {
+            from {
+              transform: translateX(0);
+              opacity: 1;
+            }
+            to {
+              transform: translateX(100%);
+              opacity: 0;
+            }
+          }
+        `}</style>
+
+        <AddDocumentModal
+          isOpen={isAddModalOpen}
+          onClose={() => setIsAddModalOpen(false)}
+        />
+
+        <FilterDocumentModal
+          isOpen={isFilterModalOpen}
+          onClose={() => setIsFilterModalOpen(false)}
+        />
+
+        <PreviewModal
+          isOpen={isPreviewOpen}
+          onClose={() => setIsPreviewOpen(false)}
+          fileUrl={documentById?.attachment} // path to file
+          fileType={
+            documentById?.attachment?.split(".").pop() as "pdf" | "doc" | "docx"
+          } // type of file
+        />
+
+        <AddTaskModal
+          isOpen={isAddTaskModalOpen}
+          onClose={() => setIsAddTaskModalOpen(false)}
+        />
+
+        <SigningModal
+          isOpen={isSigningModalOpen}
+          onClose={() => setIsSigningModalOpen(false)}
+          fileUrl={documentById?.attachment}
+        />
+
+        {selectedDoc && (
+          <EditDocumentModal
+            isOpen={showEditModal}
+            onClose={() => {
+              setShowEditModal(false);
+              setSelectedDoc(null);
+            }}
+            document={selectedDoc}
+            onSuccess={handleEditSuccess}
+          />
         )}
-      </div>
 
-      <style jsx>{`
-        @keyframes slideIn {
-          from {
-            transform: translateX(100%);
-            opacity: 0;
-          }
-          to {
-            transform: translateX(0);
-            opacity: 1;
-          }
-        }
-        @keyframes slideOut {
-          from {
-            transform: translateX(0);
-            opacity: 1;
-          }
-          to {
-            transform: translateX(100%);
-            opacity: 0;
-          }
-        }
-      `}</style>
-
-      <AddDocumentModal
-        isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
-      />
-
-      <FilterDocumentModal
-        isOpen={isFilterModalOpen}
-        onClose={() => setIsFilterModalOpen(false)}
-      />
-
-      <PreviewModal
-        isOpen={isPreviewOpen}
-        onClose={() => setIsPreviewOpen(false)}
-        fileUrl={documentById?.attachment} // path to file
-        fileType={documentById?.attachment?.split('.').pop() as 'pdf' | 'doc' | 'docx'} // type of file
-      />
-
-      <AddTaskModal
-        isOpen={isAddTaskModalOpen}
-        onClose={() => setIsAddTaskModalOpen(false)}
-      />
-
-      <SigningModal
-        isOpen={isSigningModalOpen}
-        onClose={() => setIsSigningModalOpen(false)}
-        fileUrl={documentById?.attachment}
-      />
+        <Toast
+          message="Cập nhật công văn đi thành công!"
+          isOpen={showToast}
+          onClose={() => setShowToast(false)}
+        />
       </div>
     </>
   );

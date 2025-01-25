@@ -1,5 +1,5 @@
 import { axiosInstance } from '@/lib/axios';
-import { Document, DocumentByIdResponse, PaginationResponse, SearchRequest, CreateDocumentRequest, AgencyUnitSuggestion, DocumentFilterParams } from '@/types/document';
+import { Document, DocumentByIdResponse, PaginationResponse, SearchRequest, CreateDocumentRequest, AgencyUnitSuggestion, DocumentFilterParams, UpdateDocumentRequest, UpdateDocumentResponse } from '@/types/document';
 import { ApiResponse } from '@/types/document';
 
 export const documentService = {
@@ -112,6 +112,42 @@ export const documentService = {
             return response.data;
         } catch (error) {
             console.error('Error filtering documents:', error);
+            throw error;
+        }
+    },
+
+    updateDocument: async (id: string, data: UpdateDocumentRequest): Promise<UpdateDocumentResponse> => {
+        try {
+            const formData = new FormData();
+
+            Object.keys(data).forEach(key => {
+                const value = data[key as keyof UpdateDocumentRequest];
+                if (value !== undefined && key !== 'file') {
+                    if (key.includes('Date') && value) {
+                        formData.append(key, new Date(value as string).toISOString());
+                    } else {
+                        formData.append(key, value.toString());
+                    }
+                }
+            });
+
+            if (data.file) {
+                formData.append('file', data.file);
+            }
+
+            const response = await axiosInstance.post<UpdateDocumentResponse>(
+                `documents/update/${id}`,
+                formData,
+                {
+                    headers: {
+                        'Content-Type': 'multipart/form-data'
+                    }
+                }
+            );
+
+            return response.data;
+        } catch (error) {
+            console.error('Error updating document:', error);
             throw error;
         }
     }
